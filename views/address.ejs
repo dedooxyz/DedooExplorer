@@ -1,0 +1,671 @@
+<%- include('partials/header') %>
+
+    <div class="address-page">
+        <div class="page-header">
+            <div class="breadcrumb">
+                <a href="/">Dashboard</a>
+                <i class="fas fa-chevron-right"></i>
+                <span>Address</span>
+            </div>
+            <h1><i class="fas fa-wallet"></i> Address Details</h1>
+        </div>
+
+        <!-- Address Card -->
+        <div class="content-card address-card">
+            <div class="address-header">
+                <div class="address-icon">
+                    <i class="fas fa-wallet"></i>
+                </div>
+                <div class="address-info">
+                    <div class="address-full">
+                        <%= address %>
+                            <button class="copy-btn" onclick="copyToClipboard('<%= address %>')" title="Copy">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Balance Stats -->
+        <div class="stats-grid address-stats">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">CONFIRMED BALANCE</span>
+                    <i class="fas fa-check-circle stat-icon"></i>
+                </div>
+                <div class="stat-value">
+                    <%= (confirmedBalance / 100000000).toFixed(8) %> <span class="currency">
+                            <%= config.coinTicker %>
+                        </span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">PENDING BALANCE</span>
+                    <i class="fas fa-clock stat-icon"></i>
+                </div>
+                <div class="stat-value">
+                    <%= (pendingBalance / 100000000).toFixed(8) %> <span class="currency">
+                            <%= config.coinTicker %>
+                        </span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">TOTAL BALANCE</span>
+                    <i class="fas fa-coins stat-icon"></i>
+                </div>
+                <div class="stat-value highlight">
+                    <%= ((confirmedBalance + pendingBalance) / 100000000).toFixed(8) %> <span class="currency">
+                            <%= config.coinTicker %>
+                        </span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">TRANSACTIONS</span>
+                    <i class="fas fa-exchange-alt stat-icon"></i>
+                </div>
+                <div class="stat-value">
+                    <%= formatNumber(totalTxs) %>
+                </div>
+            </div>
+        </div>
+
+        <!-- Address Statistics -->
+        <div class="content-card">
+            <div class="card-header">
+                <h2><i class="fas fa-chart-pie"></i> Address Statistics</h2>
+            </div>
+
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="detail-label">Total Received</span>
+                    <span class="detail-value">
+                        <%= ((addressInfo.chain_stats && addressInfo.chain_stats.funded_txo_sum ?
+                            addressInfo.chain_stats.funded_txo_sum : 0) / 100000000).toFixed(8) %>
+                            <%= config.coinTicker %>
+                    </span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Total Sent</span>
+                    <span class="detail-value">
+                        <%= ((addressInfo.chain_stats && addressInfo.chain_stats.spent_txo_sum ?
+                            addressInfo.chain_stats.spent_txo_sum : 0) / 100000000).toFixed(8) %>
+                            <%= config.coinTicker %>
+                    </span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Received UTXOs</span>
+                    <span class="detail-value">
+                        <%= formatNumber(addressInfo.chain_stats && addressInfo.chain_stats.funded_txo_count ?
+                            addressInfo.chain_stats.funded_txo_count : 0) %>
+                    </span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Spent UTXOs</span>
+                    <span class="detail-value">
+                        <%= formatNumber(addressInfo.chain_stats && addressInfo.chain_stats.spent_txo_count ?
+                            addressInfo.chain_stats.spent_txo_count : 0) %>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs Section -->
+        <div class="content-card tabs-card">
+            <!-- Tab Navigation -->
+            <div class="tabs-nav">
+                <button class="tab-btn active" data-tab="transactions" onclick="switchTab('transactions')">
+                    <i class="fas fa-history"></i> Transaction History
+                    <span class="tab-count">
+                        <%= formatNumber(totalTxs) %>
+                    </span>
+                </button>
+                <button class="tab-btn" data-tab="utxos" onclick="switchTab('utxos')">
+                    <i class="fas fa-coins"></i> Unspent Outputs
+                    <span class="tab-count">
+                        <%= formatNumber(totalUtxos || 0) %>
+                    </span>
+                </button>
+            </div>
+
+            <!-- Transactions Tab -->
+            <div class="tab-content active" id="tab-transactions">
+                <div class="tab-header">
+                    <h3><i class="fas fa-history"></i> Transaction History</h3>
+                    <div class="tab-header-controls">
+                        <span class="showing-info" id="tx-showing">Showing 1-<%= Math.min(25, totalTxs) %> of <%=
+                                    formatNumber(totalTxs) %></span>
+                        <div class="header-pagination">
+                            <button class="page-btn-sm" id="tx-prev" onclick="loadPrevPage('tx')" disabled>
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button class="page-btn-sm" id="tx-next" onclick="loadNextPage('tx')" <%=totalTxs <=25
+                                ? 'disabled' : '' %>>
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Transaction ID</th>
+                                <th>Block</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tx-tbody">
+                            <% if (transactions && transactions.length> 0) { %>
+                                <% transactions.forEach(function(tx) { %>
+                                    <tr class="clickable-row" onclick="openTxModal('<%= tx.txid %>')">
+                                        <td>
+                                            <span class="hash-value" title="<%= tx.txid %>">
+                                                <%= formatHash(tx.txid, 24) %>
+                                                    <button class="copy-btn"
+                                                        onclick="event.stopPropagation(); copyToClipboard('<%= tx.txid %>')"
+                                                        title="Copy">
+                                                        <i class="fas fa-copy"></i>
+                                                    </button>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <% if (tx.status && tx.status.confirmed) { %>
+                                                <a href="/block/<%= tx.status.block_hash %>" class="block-height"
+                                                    onclick="event.stopPropagation()">
+                                                    <%= formatNumber(tx.status.block_height) %>
+                                                </a>
+                                                <% } else { %>--<% } %>
+                                        </td>
+                                        <td class="text-muted">
+                                            <%= tx.status && tx.status.block_time ? formatTimeAgo(tx.status.block_time)
+                                                : 'Pending' %>
+                                        </td>
+                                        <td>
+                                            <% if (tx.status && tx.status.confirmed) { %>
+                                                <span class="badge badge-confirmed">Confirmed</span>
+                                                <% } else { %>
+                                                    <span class="badge badge-pending">Pending</span>
+                                                    <% } %>
+                                        </td>
+                                    </tr>
+                                    <% }); %>
+                                        <% } else { %>
+                                            <tr>
+                                                <td colspan="4" class="text-center text-muted">No transactions found
+                                                </td>
+                                            </tr>
+                                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="tx-loader" class="infinite-loader" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i> Loading more transactions...
+                </div>
+            </div>
+
+            <!-- UTXOs Tab -->
+            <div class="tab-content" id="tab-utxos">
+                <div class="tab-header">
+                    <h3><i class="fas fa-coins"></i> Unspent Outputs</h3>
+                    <div class="tab-header-controls">
+                        <span class="showing-info" id="utxo-showing">
+                            <% if (utxoError) { %>Unable to load<% } else { %>
+                                    Showing 1-<%= Math.min(25, utxos.length) %> of <%= formatNumber(totalUtxos ||
+                                            utxos.length) %>
+                                            <% } %>
+                        </span>
+                        <div class="header-pagination">
+                            <button class="page-btn-sm" id="utxo-prev" onclick="loadPrevPage('utxo')" disabled>
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button class="page-btn-sm" id="utxo-next" onclick="loadNextPage('utxo')" <%=(totalUtxos ||
+                                0) <=25 ? 'disabled' : '' %>>
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <% if (utxoError) { %>
+                    <div class="utxo-error" style="padding: 40px; color: var(--text-muted); text-align: center;">
+                        <i class="fas fa-exclamation-triangle"
+                            style="color: var(--warning); font-size: 2rem; margin-bottom: 10px;"></i>
+                        <p>Unable to load UTXOs: Too many entries.</p>
+                        <p style="font-size: 0.85rem;">This address has a very large transaction history.</p>
+                    </div>
+                    <% } else { %>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Transaction ID</th>
+                                        <th>Output Index</th>
+                                        <th>Value</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="utxo-tbody">
+                                    <% if (utxos && utxos.length> 0) { %>
+                                        <% utxos.forEach(function(utxo) { %>
+                                            <tr class="clickable-row" onclick="window.location='/tx/<%= utxo.txid %>'">
+                                                <td>
+                                                    <span class="hash-value" title="<%= utxo.txid %>">
+                                                        <%= formatHash(utxo.txid, 24) %>
+                                                            <button class="copy-btn"
+                                                                onclick="event.stopPropagation(); copyToClipboard('<%= utxo.txid %>')"
+                                                                title="Copy">
+                                                                <i class="fas fa-copy"></i>
+                                                            </button>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <%= utxo.vout %>
+                                                </td>
+                                                <td class="highlight">
+                                                    <%= (utxo.value / 100000000).toFixed(8) %>
+                                                        <%= config.coinTicker %>
+                                                </td>
+                                                <td>
+                                                    <% if (utxo.status && utxo.status.confirmed) { %>
+                                                        <span class="badge badge-confirmed">Block <%=
+                                                                formatNumber(utxo.status.block_height) %></span>
+                                                        <% } else { %>
+                                                            <span class="badge badge-pending">Pending</span>
+                                                            <% } %>
+                                                </td>
+                                            </tr>
+                                            <% }); %>
+                                                <% } else { %>
+                                                    <tr>
+                                                        <td colspan="4" class="text-center text-muted">No unspent
+                                                            outputs found</td>
+                                                    </tr>
+                                                    <% } %>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="utxo-loader" class="infinite-loader" style="display: none;">
+                            <i class="fas fa-spinner fa-spin"></i> Loading more UTXOs...
+                        </div>
+                        <% } %>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.tab === tabName) btn.classList.add('active');
+            });
+
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById('tab-' + tabName).classList.add('active');
+        }
+
+        // Pagination state
+        const address = '<%= address %>';
+        const coinTicker = '<%= config.coinTicker %>';
+        let txPage = 0;
+        let utxoPage = 0;
+        let txTotal = <%= totalTxs %>;
+        let utxoTotal = <%= totalUtxos || 0 %>;
+        let isLoadingTx = false;
+        let isLoadingUtxo = false;
+
+        // Load next page
+        function loadNextPage(type) {
+            if (type === 'tx') {
+                txPage++;
+                loadTransactions(txPage, false);
+            } else {
+                utxoPage++;
+                loadUtxos(utxoPage, false);
+            }
+        }
+
+        // Load previous page
+        function loadPrevPage(type) {
+            if (type === 'tx' && txPage > 0) {
+                txPage--;
+                loadTransactions(txPage, false);
+            } else if (type === 'utxo' && utxoPage > 0) {
+                utxoPage--;
+                loadUtxos(utxoPage, false);
+            }
+        }
+
+        // Load transactions
+        async function loadTransactions(page, append = true) {
+            if (isLoadingTx) return;
+            isLoadingTx = true;
+
+            const loader = document.getElementById('tx-loader');
+            loader.style.display = 'block';
+
+            try {
+                const response = await fetch(`/api/address/${address}/txs?start_index=${page * 25}&limit=25`);
+                const data = await response.json();
+                const txs = data.transactions || data || [];
+
+                const tbody = document.getElementById('tx-tbody');
+                if (!append) tbody.innerHTML = '';
+
+                txs.forEach(tx => {
+                    const row = createTxRow(tx);
+                    tbody.insertAdjacentHTML('beforeend', row);
+                });
+
+                // Update showing info
+                const start = page * 25 + 1;
+                const end = Math.min((page + 1) * 25, txTotal);
+                document.getElementById('tx-showing').textContent = `Showing ${start}-${end} of ${txTotal.toLocaleString()}`;
+
+                // Update pagination buttons
+                document.getElementById('tx-prev').disabled = page === 0;
+                document.getElementById('tx-next').disabled = (page + 1) * 25 >= txTotal;
+
+            } catch (err) {
+                console.error('Failed to load transactions:', err);
+            } finally {
+                loader.style.display = 'none';
+                isLoadingTx = false;
+            }
+        }
+
+        // Load UTXOs
+        async function loadUtxos(page, append = true) {
+            if (isLoadingUtxo) return;
+            isLoadingUtxo = true;
+
+            const loader = document.getElementById('utxo-loader');
+            if (loader) loader.style.display = 'block';
+
+            try {
+                const response = await fetch(`/api/address/${address}/utxo?start_index=${page * 25}&limit=25`);
+                const data = await response.json();
+                const utxos = data.utxos || data || [];
+
+                const tbody = document.getElementById('utxo-tbody');
+                if (!append) tbody.innerHTML = '';
+
+                utxos.forEach(utxo => {
+                    const row = createUtxoRow(utxo);
+                    tbody.insertAdjacentHTML('beforeend', row);
+                });
+
+                // Update showing info
+                const start = page * 25 + 1;
+                const end = Math.min((page + 1) * 25, utxoTotal);
+                document.getElementById('utxo-showing').textContent = `Showing ${start}-${end} of ${utxoTotal.toLocaleString()}`;
+
+                // Update pagination buttons
+                document.getElementById('utxo-prev').disabled = page === 0;
+                document.getElementById('utxo-next').disabled = (page + 1) * 25 >= utxoTotal;
+
+            } catch (err) {
+                console.error('Failed to load UTXOs:', err);
+            } finally {
+                if (loader) loader.style.display = 'none';
+                isLoadingUtxo = false;
+            }
+        }
+
+        // Create transaction row HTML
+        function createTxRow(tx) {
+            const confirmed = tx.status && tx.status.confirmed;
+            const blockLink = confirmed
+                ? `<a href="/block/${tx.status.block_hash}" class="block-height" onclick="event.stopPropagation()">${tx.status.block_height.toLocaleString()}</a>`
+                : '--';
+            const time = confirmed && tx.status.block_time
+                ? formatTimeAgo(tx.status.block_time)
+                : 'Pending';
+            const badge = confirmed
+                ? '<span class="badge badge-confirmed">Confirmed</span>'
+                : '<span class="badge badge-pending">Pending</span>';
+
+            return `
+                <tr class="clickable-row" onclick="window.location='/tx/${tx.txid}'">
+                    <td>
+                        <span class="hash-value" title="${tx.txid}">
+                            ${formatHash(tx.txid, 24)}
+                            <button class="copy-btn" onclick="event.stopPropagation(); copyToClipboard('${tx.txid}')" title="Copy">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </span>
+                    </td>
+                    <td>${blockLink}</td>
+                    <td class="text-muted">${time}</td>
+                    <td>${badge}</td>
+                </tr>
+            `;
+        }
+
+        // Create UTXO row HTML
+        function createUtxoRow(utxo) {
+            const confirmed = utxo.status && utxo.status.confirmed;
+            const badge = confirmed
+                ? `<span class="badge badge-confirmed">Block ${utxo.status.block_height.toLocaleString()}</span>`
+                : '<span class="badge badge-pending">Pending</span>';
+
+            return `
+                <tr class="clickable-row" onclick="window.location='/tx/${utxo.txid}'">
+                    <td>
+                        <span class="hash-value" title="${utxo.txid}">
+                            ${formatHash(utxo.txid, 24)}
+                            <button class="copy-btn" onclick="event.stopPropagation(); copyToClipboard('${utxo.txid}')" title="Copy">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </span>
+                    </td>
+                    <td>${utxo.vout}</td>
+                    <td class="highlight">${(utxo.value / 100000000).toFixed(8)} ${coinTicker}</td>
+                    <td>${badge}</td>
+                </tr>
+            `;
+        }
+
+        // Format hash for display
+        function formatHash(hash, length = 16) {
+            if (!hash) return '';
+            if (hash.length <= length) return hash;
+            const half = Math.floor(length / 2);
+            return hash.substring(0, half) + '...' + hash.substring(hash.length - half);
+        }
+
+        // Format time ago
+        function formatTimeAgo(timestamp) {
+            const seconds = Math.floor(Date.now() / 1000 - timestamp);
+            if (seconds < 60) return seconds + ' seconds ago';
+            if (seconds < 3600) return Math.floor(seconds / 60) + ' minutes ago';
+            if (seconds < 86400) return Math.floor(seconds / 3600) + ' hours ago';
+            return Math.floor(seconds / 86400) + ' days ago';
+        }
+
+        // Infinite scroll
+        function setupInfiniteScroll() {
+            const txTab = document.getElementById('tab-transactions');
+            const utxoTab = document.getElementById('tab-utxos');
+
+            window.addEventListener('scroll', () => {
+                const scrollBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 200;
+
+                if (scrollBottom) {
+                    if (txTab.classList.contains('active') && !isLoadingTx && (txPage + 1) * 25 < txTotal) {
+                        txPage++;
+                        loadTransactions(txPage, true);
+                    } else if (utxoTab.classList.contains('active') && !isLoadingUtxo && (utxoPage + 1) * 25 < utxoTotal) {
+                        utxoPage++;
+                        loadUtxos(utxoPage, true);
+                    }
+                }
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', setupInfiniteScroll);
+
+        // ============ INLINE TX DETAIL EXPAND ============
+
+        let expandedTxId = null;
+
+        // Toggle inline transaction detail
+        async function openTxModal(txid) {
+            const clickedRow = event.currentTarget;
+            const detailRowId = `tx-detail-${txid}`;
+            const existingDetail = document.getElementById(detailRowId);
+
+            // If already expanded, collapse it
+            if (existingDetail) {
+                existingDetail.remove();
+                clickedRow.classList.remove('expanded');
+                expandedTxId = null;
+                return;
+            }
+
+            // Collapse any previously expanded row
+            if (expandedTxId) {
+                const prevDetail = document.getElementById(`tx-detail-${expandedTxId}`);
+                if (prevDetail) prevDetail.remove();
+                document.querySelectorAll('.clickable-row.expanded').forEach(r => r.classList.remove('expanded'));
+            }
+
+            expandedTxId = txid;
+            clickedRow.classList.add('expanded');
+
+            // Create detail row with loader
+            const detailRow = document.createElement('tr');
+            detailRow.id = detailRowId;
+            detailRow.className = 'tx-detail-row-expanded';
+            detailRow.innerHTML = `
+                <td colspan="4">
+                    <div class="tx-expand-content">
+                        <div class="expand-loader">
+                            <i class="fas fa-spinner fa-spin"></i> Loading transaction details...
+                        </div>
+                    </div>
+                </td>
+            `;
+            clickedRow.after(detailRow);
+
+            try {
+                const response = await fetch(`/api/tx/${txid}`);
+                const tx = await response.json();
+                detailRow.querySelector('.tx-expand-content').innerHTML = renderTxDetail(tx);
+            } catch (err) {
+                detailRow.querySelector('.tx-expand-content').innerHTML = `
+                    <div class="expand-error">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Failed to load transaction
+                        <a href="/tx/${txid}" class="btn-link">Open in new page →</a>
+                    </div>
+                `;
+            }
+        }
+
+        // Render transaction detail HTML for inline expand
+        function renderTxDetail(tx) {
+            const confirmed = tx.status && tx.status.confirmed;
+            const statusBadge = confirmed
+                ? '<span class="badge badge-confirmed">Confirmed</span>'
+                : '<span class="badge badge-pending">Pending</span>';
+
+            let html = `
+                <div class="tx-expand-header">
+                    <div class="tx-expand-info">
+                        <div class="tx-info-item">
+                            <span class="label">Status</span>
+                            <span class="value">${statusBadge}</span>
+                        </div>
+                        ${confirmed ? `
+                        <div class="tx-info-item">
+                            <span class="label">Block</span>
+                            <span class="value"><a href="/block/${tx.status.block_hash}">${tx.status.block_height.toLocaleString()}</a></span>
+                        </div>
+                        <div class="tx-info-item">
+                            <span class="label">Time</span>
+                            <span class="value">${formatTimeAgo(tx.status.block_time)}</span>
+                        </div>
+                        ` : ''}
+                        <div class="tx-info-item">
+                            <span class="label">Size</span>
+                            <span class="value">${tx.size?.toLocaleString() || 0} bytes</span>
+                        </div>
+                        <div class="tx-info-item">
+                            <span class="label">Fee</span>
+                            <span class="value">${((tx.fee || 0) / 100000000).toFixed(8)} ${coinTicker}</span>
+                        </div>
+                    </div>
+                    <a href="/tx/${tx.txid}" class="btn-view-full">
+                        View Full Details <i class="fas fa-external-link-alt"></i>
+                    </a>
+                </div>
+                <div class="tx-io-inline">
+                    <div class="io-column">
+                        <h5><i class="fas fa-sign-in-alt"></i> Inputs (${tx.vin?.length || 0})</h5>
+            `;
+
+            // Inputs
+            if (tx.vin && tx.vin.length > 0) {
+                tx.vin.slice(0, 5).forEach(input => {
+                    const addr = input.prevout?.scriptpubkey_address || (input.is_coinbase ? 'Coinbase' : 'Unknown');
+                    const value = input.prevout?.value || 0;
+                    html += `
+                        <div class="io-inline-item">
+                            <span class="io-addr">${input.is_coinbase ? '⛏️ Coinbase' : formatHash(addr, 16)}</span>
+                            <span class="io-amt">${(value / 100000000).toFixed(8)}</span>
+                        </div>
+                    `;
+                });
+                if (tx.vin.length > 5) {
+                    html += `<div class="io-more-inline">+ ${tx.vin.length - 5} more</div>`;
+                }
+            }
+
+            html += `
+                    </div>
+                    <div class="io-arrow-inline"><i class="fas fa-arrow-right"></i></div>
+                    <div class="io-column">
+                        <h5><i class="fas fa-sign-out-alt"></i> Outputs (${tx.vout?.length || 0})</h5>
+            `;
+
+            // Outputs
+            if (tx.vout && tx.vout.length > 0) {
+                tx.vout.slice(0, 5).forEach(output => {
+                    const addr = output.scriptpubkey_address || 'Unknown';
+                    html += `
+                        <div class="io-inline-item">
+                            <span class="io-addr">${formatHash(addr, 16)}</span>
+                            <span class="io-amt highlight">${(output.value / 100000000).toFixed(8)}</span>
+                        </div>
+                    `;
+                });
+                if (tx.vout.length > 5) {
+                    html += `<div class="io-more-inline">+ ${tx.vout.length - 5} more</div>`;
+                }
+            }
+
+            html += `
+                    </div>
+                </div>
+            `;
+
+            return html;
+        }
+    </script>
+
+    <%- include('partials/footer') %>

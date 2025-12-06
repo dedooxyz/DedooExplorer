@@ -1,0 +1,179 @@
+<%- include('partials/header') %>
+
+    <div class="dashboard">
+        <div class="page-header">
+            <h1><i class="fas fa-chart-line"></i> Dashboard</h1>
+            <p class="page-subtitle">Real-time <%= config.coinName %> blockchain statistics and recent blocks</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">BLOCKS</span>
+                    <i class="fas fa-cube stat-icon"></i>
+                </div>
+                <div class="stat-value">
+                    <%= formatNumber(tipHeight) %>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">HASHRATE</span>
+                    <i class="fas fa-tachometer-alt stat-icon"></i>
+                </div>
+                <div class="stat-value">
+                    <%= formatHashrate(hashrate) %>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">AVG BLOCK TIME</span>
+                    <i class="fas fa-clock stat-icon"></i>
+                </div>
+                <div class="stat-value">
+                    <%= avgBlockTime %>s
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">MEMPOOL TXS</span>
+                    <i class="fas fa-layer-group stat-icon"></i>
+                </div>
+                <div class="stat-value">
+                    <%= formatNumber(mempoolCount) %>
+                </div>
+            </div>
+        </div>
+
+        <!-- Secondary Stats Row -->
+        <div class="stats-grid stats-secondary">
+            <div class="stat-card accent">
+                <div class="stat-header">
+                    <span class="stat-label">DIFFICULTY</span>
+                    <i class="fas fa-mountain stat-icon"></i>
+                </div>
+                <div class="stat-value">
+                    <%= formatDifficulty(difficulty) %>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">SUPPLY</span>
+                    <i class="fas fa-coins stat-icon"></i>
+                </div>
+                <div class="stat-value">
+                    <%= formatNumber(Math.round(supply)) %> <span class="currency">
+                            <%= config.coinTicker %>
+                        </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Blocks Section -->
+        <div class="section">
+            <div class="section-header">
+                <h2><i class="fas fa-cubes"></i> Recent Blocks</h2>
+                <a href="/blocks" class="view-all-link">View all <i class="fas fa-arrow-right"></i></a>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Height</th>
+                            <th>Hash</th>
+                            <th>Time</th>
+                            <th>Transactions</th>
+                            <th>Size</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% blocks.forEach(function(block) { %>
+                            <tr class="clickable-row" onclick="window.location='/block/<%= block.id %>'">
+                                <td><span class="block-height">
+                                        <%= formatNumber(block.height) %>
+                                    </span></td>
+                                <td>
+                                    <span class="hash-value" title="<%= block.id %>">
+                                        <%= formatHash(block.id, 20) %>
+                                            <button class="copy-btn"
+                                                onclick="event.stopPropagation(); copyToClipboard('<%= block.id %>')"
+                                                title="Copy">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                    </span>
+                                </td>
+                                <td class="text-muted">
+                                    <%= formatTimeAgo(block.timestamp) %>
+                                </td>
+                                <td>
+                                    <%= block.tx_count %>
+                                </td>
+                                <td>
+                                    <%= formatBytes(block.size) %>
+                                </td>
+                            </tr>
+                            <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Transaction Volume Chart -->
+        <div class="section">
+            <div class="section-header">
+                <h2><i class="fas fa-chart-area"></i> Transaction Volume (Last <%= blocks.length %> Blocks)</h2>
+            </div>
+            <div class="chart-container">
+                <canvas id="txVolumeChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Transaction Volume Chart
+        const blockData = <% - JSON.stringify(blocks.slice().reverse()) %>;
+        const ctx = document.getElementById('txVolumeChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: blockData.map(b => b.height),
+                datasets: [{
+                    label: 'Transactions per Block',
+                    data: blockData.map(b => b.tx_count),
+                    fill: true,
+                    backgroundColor: 'rgba(245, 166, 35, 0.2)',
+                    borderColor: '#F5A623',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#F5A623'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { color: '#888' }
+                    },
+                    y: {
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { color: '#888' },
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+
+    <%- include('partials/footer') %>

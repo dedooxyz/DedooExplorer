@@ -1,0 +1,312 @@
+<%- include('partials/header') %>
+
+    <div class="blocks-page">
+        <div class="page-header">
+            <h1><i class="fas fa-cubes"></i> Blocks</h1>
+            <p class="page-subtitle">Browse all blocks on the <%= config.coinName %> blockchain</p>
+        </div>
+
+        <div class="content-card">
+            <div class="card-header">
+                <h2><i class="fas fa-cube"></i> Block List</h2>
+                <div class="header-controls">
+                    <span class="showing-info" id="blocks-showing">
+                        Showing 1-<%= Math.min(25, blocks.length) %> of <%= formatNumber(tipHeight + 1) %>
+                    </span>
+                    <div class="header-pagination">
+                        <button class="page-btn-sm" id="blocks-prev" onclick="loadPrevBlocks()" disabled>
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <button class="page-btn-sm" id="blocks-next" onclick="loadNextBlocks()" <%=tipHeight <=25
+                            ? 'disabled' : '' %>>
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Height</th>
+                            <th>Hash</th>
+                            <th>Timestamp</th>
+                            <th>Transactions</th>
+                            <th>Size</th>
+                            <th>Difficulty</th>
+                        </tr>
+                    </thead>
+                    <tbody id="blocks-tbody">
+                        <% blocks.forEach(function(block) { %>
+                            <tr class="clickable-row" onclick="toggleBlockDetail('<%= block.id %>', this)">
+                                <td><span class="block-height">
+                                        <%= formatNumber(block.height) %>
+                                    </span></td>
+                                <td>
+                                    <span class="hash-value" title="<%= block.id %>">
+                                        <%= formatHash(block.id, 20) %>
+                                            <button class="copy-btn"
+                                                onclick="event.stopPropagation(); copyToClipboard('<%= block.id %>')"
+                                                title="Copy">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="time-cell">
+                                        <span class="time-ago">
+                                            <%= formatTimeAgo(block.timestamp) %>
+                                        </span>
+                                        <span class="time-full">
+                                            <%= formatDate(block.timestamp) %>
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <%= block.tx_count %>
+                                </td>
+                                <td>
+                                    <%= formatBytes(block.size) %>
+                                </td>
+                                <td>
+                                    <%= block.difficulty ? block.difficulty.toLocaleString(undefined,
+                                        {maximumFractionDigits: 2}) : '--' %>
+                                </td>
+                            </tr>
+                            <% }); %>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="blocks-loader" class="infinite-loader" style="display: none;">
+                <i class="fas fa-spinner fa-spin"></i> Loading more blocks...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let blocksPage = 0;
+        const tipHeight = <%= tipHeight %>;
+        let isLoadingBlocks = false;
+        let expandedBlockId = null;
+
+        // Load next page
+        function loadNextBlocks() {
+            blocksPage++;
+            loadBlocks(blocksPage, false);
+        }
+
+        // Load prev page
+        function loadPrevBlocks() {
+            if (blocksPage > 0) {
+                blocksPage--;
+                loadBlocks(blocksPage, false);
+            }
+        }
+
+        // Load blocks
+        async function loadBlocks(page, append = true) {
+            if (isLoadingBlocks) return;
+            isLoadingBlocks = true;
+
+            const loader = document.getElementById('blocks-loader');
+            loader.style.display = 'flex';
+
+            try {
+                const startHeight = tipHeight - (page * 25);
+                const response = await fetch(`/api/blocks/${startHeight}`);
+                const blocks = await response.json();
+
+                const tbody = document.getElementById('blocks-tbody');
+                if (!append) tbody.innerHTML = '';
+
+                blocks.forEach(block => {
+                    const row = createBlockRow(block);
+                    tbody.insertAdjacentHTML('beforeend', row);
+                });
+
+                // Update showing info
+                const start = page * 25 + 1;
+                const end = Math.min((page + 1) * 25, tipHeight + 1);
+                document.getElementById('blocks-showing').textContent =
+                    `Showing ${start}-${end} of ${(tipHeight + 1).toLocaleString()}`;
+
+                // Update pagination buttons
+                document.getElementById('blocks-prev').disabled = page === 0;
+                document.getElementById('blocks-next').disabled = (page + 1) * 25 >= tipHeight + 1;
+
+            } catch (err) {
+                console.error('Failed to load blocks:', err);
+            } finally {
+                loader.style.display = 'none';
+                isLoadingBlocks = false;
+            }
+        }
+
+        // Create block row HTML
+        function createBlockRow(block) {
+            return `
+                <tr class="clickable-row" onclick="toggleBlockDetail('${block.id}', this)">
+                    <td><span class="block-height">${block.height.toLocaleString()}</span></td>
+                    <td>
+                        <span class="hash-value" title="${block.id}">
+                            ${formatHash(block.id, 20)}
+                            <button class="copy-btn" onclick="event.stopPropagation(); copyToClipboard('${block.id}')" title="Copy">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </span>
+                    </td>
+                    <td>
+                        <div class="time-cell">
+                            <span class="time-ago">${formatTimeAgo(block.timestamp)}</span>
+                        </div>
+                    </td>
+                    <td>${block.tx_count}</td>
+                    <td>${formatBytes(block.size)}</td>
+                    <td>${block.difficulty ? block.difficulty.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '--'}</td>
+                </tr>
+            `;
+        }
+
+        // Toggle block detail expand
+        async function toggleBlockDetail(blockHash, row) {
+            const detailRowId = `block-detail-${blockHash}`;
+            const existingDetail = document.getElementById(detailRowId);
+
+            // If already expanded, collapse
+            if (existingDetail) {
+                existingDetail.remove();
+                row.classList.remove('expanded');
+                expandedBlockId = null;
+                return;
+            }
+
+            // Collapse previous
+            if (expandedBlockId) {
+                const prevDetail = document.getElementById(`block-detail-${expandedBlockId}`);
+                if (prevDetail) prevDetail.remove();
+                document.querySelectorAll('.clickable-row.expanded').forEach(r => r.classList.remove('expanded'));
+            }
+
+            expandedBlockId = blockHash;
+            row.classList.add('expanded');
+
+            // Create detail row with loader
+            const detailRow = document.createElement('tr');
+            detailRow.id = detailRowId;
+            detailRow.className = 'tx-detail-row-expanded';
+            detailRow.innerHTML = `
+                <td colspan="6">
+                    <div class="tx-expand-content">
+                        <div class="expand-loader">
+                            <i class="fas fa-spinner fa-spin"></i> Loading block details...
+                        </div>
+                    </div>
+                </td>
+            `;
+            row.after(detailRow);
+
+            try {
+                const response = await fetch(`/api/block/${blockHash}`);
+                const block = await response.json();
+                detailRow.querySelector('.tx-expand-content').innerHTML = renderBlockDetail(block);
+            } catch (err) {
+                detailRow.querySelector('.tx-expand-content').innerHTML = `
+                    <div class="expand-error">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Failed to load block details
+                        <a href="/block/${blockHash}" class="btn-link">Open in new page →</a>
+                    </div>
+                `;
+            }
+        }
+
+        // Render block detail
+        function renderBlockDetail(block) {
+            return `
+                <div class="tx-expand-header">
+                    <div class="tx-expand-info">
+                        <div class="tx-info-item">
+                            <span class="label">Height</span>
+                            <span class="value">${block.height?.toLocaleString() || '--'}</span>
+                        </div>
+                        <div class="tx-info-item">
+                            <span class="label">Transactions</span>
+                            <span class="value">${block.tx_count || 0}</span>
+                        </div>
+                        <div class="tx-info-item">
+                            <span class="label">Size</span>
+                            <span class="value">${formatBytes(block.size || 0)}</span>
+                        </div>
+                        <div class="tx-info-item">
+                            <span class="label">Weight</span>
+                            <span class="value">${(block.weight || 0).toLocaleString()}</span>
+                        </div>
+                        <div class="tx-info-item">
+                            <span class="label">Version</span>
+                            <span class="value">${block.version || '--'}</span>
+                        </div>
+                        <div class="tx-info-item">
+                            <span class="label">Nonce</span>
+                            <span class="value">${(block.nonce || 0).toLocaleString()}</span>
+                        </div>
+                    </div>
+                    <a href="/block/${block.id}" class="btn-view-full">
+                        View Full Details <i class="fas fa-external-link-alt"></i>
+                    </a>
+                </div>
+                <div class="block-detail-hashes">
+                    <div class="hash-row">
+                        <span class="label">Block Hash</span>
+                        <span class="value hash-mono">${block.id || '--'}</span>
+                    </div>
+                    <div class="hash-row">
+                        <span class="label">Merkle Root</span>
+                        <span class="value hash-mono">${block.merkle_root || '--'}</span>
+                    </div>
+                    <div class="hash-row">
+                        <span class="label">Previous Block</span>
+                        <span class="value hash-mono">
+                            <a href="/block/${block.previousblockhash}">${formatHash(block.previousblockhash || '', 30)}</a>
+                        </span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Utility functions
+        function formatHash(hash, length = 16) {
+            if (!hash) return '';
+            if (hash.length <= length) return hash;
+            const half = Math.floor(length / 2);
+            return hash.substring(0, half) + '...' + hash.substring(hash.length - half);
+        }
+
+        function formatTimeAgo(timestamp) {
+            const seconds = Math.floor(Date.now() / 1000 - timestamp);
+            if (seconds < 60) return seconds + ' seconds ago';
+            if (seconds < 3600) return Math.floor(seconds / 60) + ' minutes ago';
+            if (seconds < 86400) return Math.floor(seconds / 3600) + ' hours ago';
+            return Math.floor(seconds / 86400) + ' days ago';
+        }
+
+        function formatBytes(bytes) {
+            if (bytes >= 1048576) return (bytes / 1048576).toFixed(2) + ' MB';
+            if (bytes >= 1024) return (bytes / 1024).toFixed(2) + ' KB';
+            return bytes + ' B';
+        }
+
+        // Infinite scroll
+        window.addEventListener('scroll', () => {
+            const scrollBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 200;
+
+            if (scrollBottom && !isLoadingBlocks && (blocksPage + 1) * 25 < tipHeight + 1) {
+                blocksPage++;
+                loadBlocks(blocksPage, true);
+            }
+        });
+    </script>
+
+    <%- include('partials/footer') %>

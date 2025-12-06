@@ -1,0 +1,209 @@
+<%- include('partials/header') %>
+
+    <div class="block-detail-page">
+        <div class="page-header">
+            <div class="breadcrumb">
+                <a href="/">Dashboard</a>
+                <i class="fas fa-chevron-right"></i>
+                <a href="/blocks">Blocks</a>
+                <i class="fas fa-chevron-right"></i>
+                <span>Block <%= formatNumber(block.height) %></span>
+            </div>
+            <h1><i class="fas fa-cube"></i> Block <%= formatNumber(block.height) %>
+            </h1>
+        </div>
+
+        <!-- Block Navigation -->
+        <div class="block-nav">
+            <% if (prevBlock) { %>
+                <a href="/block/<%= prevBlock %>" class="block-nav-btn"><i class="fas fa-arrow-left"></i> Previous
+                    Block</a>
+                <% } else { %>
+                    <span class="block-nav-btn disabled"><i class="fas fa-arrow-left"></i> Previous Block</span>
+                    <% } %>
+
+                        <% if (nextBlock) { %>
+                            <a href="/block/<%= nextBlock %>" class="block-nav-btn">Next Block <i
+                                    class="fas fa-arrow-right"></i></a>
+                            <% } else { %>
+                                <span class="block-nav-btn disabled">Next Block <i
+                                        class="fas fa-arrow-right"></i></span>
+                                <% } %>
+        </div>
+
+        <!-- Block Details Card -->
+        <div class="content-card">
+            <div class="card-header">
+                <h2>Block Information</h2>
+            </div>
+
+            <div class="detail-grid">
+                <div class="detail-item full-width">
+                    <span class="detail-label">Block Hash</span>
+                    <span class="detail-value hash-full">
+                        <%= block.id %>
+                            <button class="copy-btn" onclick="copyToClipboard('<%= block.id %>')" title="Copy">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                    </span>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label">Height</span>
+                    <span class="detail-value">
+                        <%= formatNumber(block.height) %>
+                    </span>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label">Timestamp</span>
+                    <span class="detail-value">
+                        <%= formatDate(block.timestamp) %>
+                            <span class="text-muted">(<%= formatTimeAgo(block.timestamp) %>)</span>
+                    </span>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label">Transactions</span>
+                    <span class="detail-value">
+                        <%= formatNumber(block.tx_count) %>
+                    </span>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label">Size</span>
+                    <span class="detail-value">
+                        <%= formatBytes(block.size) %>
+                    </span>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label">Weight</span>
+                    <span class="detail-value">
+                        <%= formatNumber(block.weight) %>
+                    </span>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label">Difficulty</span>
+                    <span class="detail-value">
+                        <%= block.difficulty ? block.difficulty.toLocaleString(undefined, {maximumFractionDigits: 2})
+                            : '--' %>
+                    </span>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label">Bits</span>
+                    <span class="detail-value">
+                        <%= block.bits %>
+                    </span>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label">Nonce</span>
+                    <span class="detail-value">
+                        <%= formatNumber(block.nonce) %>
+                    </span>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label">Version</span>
+                    <span class="detail-value">
+                        <%= block.version %>
+                    </span>
+                </div>
+
+                <div class="detail-item full-width">
+                    <span class="detail-label">Merkle Root</span>
+                    <span class="detail-value hash-full">
+                        <%= block.merkle_root %>
+                            <button class="copy-btn" onclick="copyToClipboard('<%= block.merkle_root %>')" title="Copy">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                    </span>
+                </div>
+
+                <% if (block.previousblockhash) { %>
+                    <div class="detail-item full-width">
+                        <span class="detail-label">Previous Block Hash</span>
+                        <span class="detail-value hash-full">
+                            <a href="/block/<%= block.previousblockhash %>">
+                                <%= block.previousblockhash %>
+                            </a>
+                            <button class="copy-btn" onclick="copyToClipboard('<%= block.previousblockhash %>')"
+                                title="Copy">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </span>
+                    </div>
+                    <% } %>
+            </div>
+        </div>
+
+        <!-- Transactions in Block -->
+        <div class="content-card">
+            <div class="card-header">
+                <h2><i class="fas fa-exchange-alt"></i> Transactions (<%= formatNumber(block.tx_count) %>)</h2>
+                <span class="showing-info">Page <%= txPage + 1 %> of <%= totalTxPages %></span>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Transaction ID</th>
+                            <th>Inputs</th>
+                            <th>Outputs</th>
+                            <th>Size</th>
+                            <th>Fee</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% transactions.forEach(function(tx) { %>
+                            <tr class="clickable-row" onclick="window.location='/tx/<%= tx.txid %>'">
+                                <td>
+                                    <span class="hash-value" title="<%= tx.txid %>">
+                                        <%= formatHash(tx.txid, 24) %>
+                                            <button class="copy-btn"
+                                                onclick="event.stopPropagation(); copyToClipboard('<%= tx.txid %>')"
+                                                title="Copy">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                    </span>
+                                </td>
+                                <td>
+                                    <%= tx.vin.length %>
+                                </td>
+                                <td>
+                                    <%= tx.vout.length %>
+                                </td>
+                                <td>
+                                    <%= formatBytes(tx.size || 0) %>
+                                </td>
+                                <td>
+                                    <%= tx.fee ? (tx.fee / 100000000).toFixed(8) : '--' %> <%= config.coinTicker %>
+                                </td>
+                            </tr>
+                            <% }); %>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Transaction Pagination -->
+            <% if (totalTxPages> 1) { %>
+                <div class="pagination">
+                    <a href="/block/<%= block.id %>?txPage=<%= txPage - 1 %>"
+                        class="page-btn <%= txPage <= 0 ? 'disabled' : '' %>">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </a>
+                    <span class="page-info">Page <%= txPage + 1 %> of <%= totalTxPages %></span>
+                    <a href="/block/<%= block.id %>?txPage=<%= txPage + 1 %>"
+                        class="page-btn <%= txPage >= totalTxPages - 1 ? 'disabled' : '' %>">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </a>
+                </div>
+                <% } %>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>

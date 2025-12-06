@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Wojak Explorer - Blockchain explorer for WojakCoin">
+    <title>
+        <%= title %> | Wojak Explorer
+    </title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <div class="logo-icon">W</div>
+                <span>Wojak Explorer</span>
+            </a>
+
+            <form class="search-form" action="/search" method="GET">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" name="q" placeholder="Search block, transaction, or address..." class="search-input">
+            </form>
+
+            <div class="nav-links">
+                <a href="/" class="nav-link <%= page === 'dashboard' ? 'active' : '' %>">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/blocks" class="nav-link <%= page === 'blocks' ? 'active' : '' %>">
+                    <i class="fas fa-cube"></i>
+                    <span>Blocks</span>
+                </a>
+                <a href="/transactions" class="nav-link <%= page === 'transactions' ? 'active' : '' %>">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Transactions</span>
+                </a>
+                <a href="/statistics" class="nav-link <%= page === 'statistics' ? 'active' : '' %>">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Statistics</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <%- body %>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <div class="logo-icon small">W</div>
+                <span>Wojak Explorer</span>
+            </div>
+            <div class="footer-text">
+                A peer to peer meme currency serving the internet community
+            </div>
+            <div class="footer-links">
+                <a href="https://www.wojakcoin.cash/" target="_blank" rel="noopener">
+                    <i class="fas fa-globe"></i> Website
+                </a>
+                <a href="https://github.com/WojakCoinProj/wojakcore" target="_blank" rel="noopener">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+                <a href="https://t.me/wojakcoin2017" target="_blank" rel="noopener">
+                    <i class="fab fa-telegram"></i> Telegram
+                </a>
+                <a href="https://x.com/wojakcoin2017" target="_blank" rel="noopener">
+                    <i class="fab fa-x-twitter"></i> X
+                </a>
+            </div>
+            <div class="footer-copyright">
+                © 2017-2025 WojakCoin. Built with ❤️ by the wojak community.
+            </div>
+        </div>
+    </footer>
+
+    <script src="/js/app.js"></script>
+</body>
+
+</html>

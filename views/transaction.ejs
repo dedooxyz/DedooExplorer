@@ -1,0 +1,195 @@
+<%- include('partials/header') %>
+
+    <div class="transaction-detail-page">
+        <div class="page-header">
+            <div class="breadcrumb">
+                <a href="/">Dashboard</a>
+                <i class="fas fa-chevron-right"></i>
+                <a href="/transactions">Transactions</a>
+                <i class="fas fa-chevron-right"></i>
+                <span>Transaction</span>
+            </div>
+            <h1><i class="fas fa-exchange-alt"></i> Transaction Details</h1>
+        </div>
+
+        <!-- Transaction Status Banner -->
+        <div class="status-banner <%= tx.status && tx.status.confirmed ? 'confirmed' : 'pending' %>">
+            <i class="fas <%= tx.status && tx.status.confirmed ? 'fa-check-circle' : 'fa-clock' %>"></i>
+            <% if (tx.status && tx.status.confirmed) { %>
+                Confirmed in block <a href="/block/<%= tx.status.block_hash %>">
+                    <%= formatNumber(tx.status.block_height) %>
+                </a>
+                <% } else { %>
+                    Pending confirmation
+                    <% } %>
+        </div>
+
+        <!-- Transaction Details Card -->
+        <div class="content-card">
+            <div class="card-header">
+                <h2>Transaction Information</h2>
+            </div>
+
+            <div class="detail-grid">
+                <div class="detail-item full-width">
+                    <span class="detail-label">Transaction ID</span>
+                    <span class="detail-value hash-full">
+                        <%= tx.txid %>
+                            <button class="copy-btn" onclick="copyToClipboard('<%= tx.txid %>')" title="Copy">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                    </span>
+                </div>
+
+                <% if (tx.status && tx.status.confirmed) { %>
+                    <div class="detail-item">
+                        <span class="detail-label">Block Height</span>
+                        <span class="detail-value">
+                            <a href="/block/<%= tx.status.block_hash %>" class="block-height">
+                                <%= formatNumber(tx.status.block_height) %>
+                            </a>
+                        </span>
+                    </div>
+
+                    <div class="detail-item">
+                        <span class="detail-label">Block Time</span>
+                        <span class="detail-value">
+                            <%= formatDate(tx.status.block_time) %> <span class="text-muted">(<%=
+                                        formatTimeAgo(tx.status.block_time) %>)</span>
+                        </span>
+                    </div>
+                    <% } %>
+
+                        <div class="detail-item">
+                            <span class="detail-label">Size</span>
+                            <span class="detail-value">
+                                <%= formatBytes(tx.size || 0) %>
+                            </span>
+                        </div>
+
+                        <div class="detail-item">
+                            <span class="detail-label">Weight</span>
+                            <span class="detail-value">
+                                <%= formatNumber(tx.weight || 0) %>
+                            </span>
+                        </div>
+
+                        <div class="detail-item">
+                            <span class="detail-label">Version</span>
+                            <span class="detail-value">
+                                <%= tx.version %>
+                            </span>
+                        </div>
+
+                        <div class="detail-item">
+                            <span class="detail-label">Locktime</span>
+                            <span class="detail-value">
+                                <%= tx.locktime %>
+                            </span>
+                        </div>
+
+                        <div class="detail-item">
+                            <span class="detail-label">Fee</span>
+                            <span class="detail-value highlight">
+                                <%= tx.fee ? (tx.fee / 100000000).toFixed(8) : '0.00000000' %> <%= config.coinTicker %>
+                            </span>
+                        </div>
+
+                        <div class="detail-item">
+                            <span class="detail-label">Fee Rate</span>
+                            <span class="detail-value">
+                                <%= tx.fee && tx.size ? (tx.fee / tx.size).toFixed(2) : '0' %> sat/B
+                            </span>
+                        </div>
+            </div>
+        </div>
+
+        <!-- Inputs and Outputs -->
+        <div class="tx-io-container">
+            <!-- Inputs -->
+            <div class="content-card io-card">
+                <div class="card-header">
+                    <h2><i class="fas fa-sign-in-alt"></i> Inputs (<%= tx.vin.length %>)</h2>
+                    <span class="io-total">
+                        <%= (totalInput / 100000000).toFixed(8) %> <%= config.coinTicker %>
+                    </span>
+                </div>
+
+                <div class="io-list">
+                    <% tx.vin.forEach(function(vin, index) { %>
+                        <div class="io-item">
+                            <div class="io-index">#<%= index %>
+                            </div>
+                            <div class="io-content">
+                                <% if (vin.is_coinbase) { %>
+                                    <div class="io-address coinbase">
+                                        <i class="fas fa-gem"></i> Coinbase (New coins)
+                                    </div>
+                                    <% } else { %>
+                                        <div class="io-address">
+                                            <% if (vin.prevout && vin.prevout.scriptpubkey_address) { %>
+                                                <a href="/address/<%= vin.prevout.scriptpubkey_address %>">
+                                                    <%= formatHash(vin.prevout.scriptpubkey_address, 24) %>
+                                                </a>
+                                                <% } else { %>
+                                                    <span class="text-muted">Unknown</span>
+                                                    <% } %>
+                                        </div>
+                                        <div class="io-amount">
+                                            <%= vin.prevout && vin.prevout.value ? (vin.prevout.value /
+                                                100000000).toFixed(8) : '0.00000000' %> <%= config.coinTicker %>
+                                        </div>
+                                        <div class="io-txref">
+                                            <a href="/tx/<%= vin.txid %>" class="text-muted">
+                                                <%= formatHash(vin.txid, 16) %>:<%= vin.vout %>
+                                            </a>
+                                        </div>
+                                        <% } %>
+                            </div>
+                        </div>
+                        <% }); %>
+                </div>
+            </div>
+
+            <div class="io-arrow">
+                <i class="fas fa-arrow-right"></i>
+            </div>
+
+            <!-- Outputs -->
+            <div class="content-card io-card">
+                <div class="card-header">
+                    <h2><i class="fas fa-sign-out-alt"></i> Outputs (<%= tx.vout.length %>)</h2>
+                    <span class="io-total">
+                        <%= (totalOutput / 100000000).toFixed(8) %> <%= config.coinTicker %>
+                    </span>
+                </div>
+
+                <div class="io-list">
+                    <% tx.vout.forEach(function(vout, index) { %>
+                        <div class="io-item">
+                            <div class="io-index">#<%= index %>
+                            </div>
+                            <div class="io-content">
+                                <div class="io-address">
+                                    <% if (vout.scriptpubkey_address) { %>
+                                        <a href="/address/<%= vout.scriptpubkey_address %>">
+                                            <%= formatHash(vout.scriptpubkey_address, 24) %>
+                                        </a>
+                                        <% } else { %>
+                                            <span class="text-muted">
+                                                <%= vout.scriptpubkey_type || 'Unknown' %>
+                                            </span>
+                                            <% } %>
+                                </div>
+                                <div class="io-amount">
+                                    <%= vout.value ? (vout.value / 100000000).toFixed(8) : '0.00000000' %> <%= config.coinTicker %>
+                                </div>
+                            </div>
+                        </div>
+                        <% }); %>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>

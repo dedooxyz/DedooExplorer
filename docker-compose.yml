@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  explorer:
+    image: senasgr/dedoo-explorer:latest
+    # To build locally instead, comment above and uncomment:
+    # build: .
+    container_name: dedoo-explorer
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./.env:/app/.env:ro
+      - ./logo.png:/app/public/img/logo.png:ro
+    environment:
+      - NODE_ENV=production
+    networks:
+      - explorer-network
+
+networks:
+  explorer-network:
+    driver: bridge

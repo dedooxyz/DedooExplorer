@@ -1,0 +1,35 @@
+# Git
+.git
+.gitignore
+
+# Dependencies (will be installed in container)
+node_modules
+
+# Environment files (mounted separately)
+.env
+.env.local
+.env.*.local
+
+# Documentation
+README.md
+docs/
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Development files
+.editorconfig
+.eslintrc*
+.prettierrc*

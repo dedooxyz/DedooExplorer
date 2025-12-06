@@ -1,0 +1,55 @@
+</main>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="footer-container">
+        <div class="footer-brand">
+            <img src="<%= config.logoUrl %>" alt="<%= config.coinName %>" class="logo-img small">
+            <span>
+                <%= config.explorerName %>
+            </span>
+        </div>
+        <div class="footer-text">
+            <%= config.coinTagline %>
+        </div>
+        <div class="footer-links">
+            <% if (config.websiteUrl) { %>
+                <a href="<%= config.websiteUrl %>" target="_blank" rel="noopener">
+                    <i class="fas fa-globe"></i> Website
+                </a>
+                <% } %>
+                    <% if (config.githubUrl) { %>
+                        <a href="<%= config.githubUrl %>" target="_blank" rel="noopener">
+                            <i class="fab fa-github"></i> GitHub
+                        </a>
+                        <% } %>
+                            <% if (config.telegramUrl) { %>
+                                <a href="<%= config.telegramUrl %>" target="_blank" rel="noopener">
+                                    <i class="fab fa-telegram"></i> Telegram
+                                </a>
+                                <% } %>
+                                    <% if (config.twitterUrl) { %>
+                                        <a href="<%= config.twitterUrl %>" target="_blank" rel="noopener">
+                                            <i class="fab fa-x-twitter"></i> X
+                                        </a>
+                                        <% } %>
+                                            <% if (config.discordUrl) { %>
+                                                <a href="<%= config.discordUrl %>" target="_blank" rel="noopener">
+                                                    <i class="fab fa-discord"></i> Discord
+                                                </a>
+                                                <% } %>
+        </div>
+        <div class="footer-copyright">
+            © 2025 Dedoo.xyz. Built with ❤️ by <a href="https://x.com/senasgr" target="_blank"
+                rel="noopener">@senasgr</a> for <%= config.coinName %> Community.
+        </div>
+        <div class="footer-version">
+            <%= config.softwareName %> v<%= config.version %>
+        </div>
+    </div>
+</footer>
+
+<script src="/js/app.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,117 @@
+<%- include('partials/header') %>
+
+    <div class="transactions-page">
+        <div class="page-header">
+            <h1><i class="fas fa-exchange-alt"></i> Transactions</h1>
+            <p class="page-subtitle">Browse all transactions on the <%= config.coinName %> blockchain</p>
+        </div>
+
+        <!-- Mempool Transactions -->
+        <% if (mempool.length> 0) { %>
+            <div class="content-card">
+                <div class="card-header">
+                    <h2><i class="fas fa-layer-group"></i> Mempool Transactions</h2>
+                    <span class="badge badge-pending">
+                        <%= mempool.length %> pending
+                    </span>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Transaction ID</th>
+                                <th>Time</th>
+                                <th>Size</th>
+                                <th>Fee</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% mempool.forEach(function(tx) { %>
+                                <tr class="clickable-row" onclick="window.location='/tx/<%= tx.txid %>'">
+                                    <td>
+                                        <span class="hash-value" title="<%= tx.txid %>">
+                                            <%= formatHash(tx.txid, 24) %>
+                                                <button class="copy-btn"
+                                                    onclick="event.stopPropagation(); copyToClipboard('<%= tx.txid %>')"
+                                                    title="Copy">
+                                                    <i class="fas fa-copy"></i>
+                                                </button>
+                                        </span>
+                                    </td>
+                                    <td class="text-muted">Just now</td>
+                                    <td>
+                                        <%= formatBytes(tx.size || 0) %>
+                                    </td>
+                                    <td>
+                                        <%= tx.fee ? (tx.fee / 100000000).toFixed(8) : '--' %>
+                                            <%= config.coinTicker %>
+                                    </td>
+                                    <td><span class="badge badge-pending">Pending</span></td>
+                                </tr>
+                                <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <% } %>
+
+                <!-- Recent Confirmed Transactions -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-check-circle"></i> Recent Confirmed Transactions</h2>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Transaction ID</th>
+                                    <th>Block</th>
+                                    <th>Time</th>
+                                    <th>Inputs</th>
+                                    <th>Outputs</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% recentTxs.forEach(function(tx) { %>
+                                    <tr class="clickable-row" onclick="window.location='/tx/<%= tx.txid %>'">
+                                        <td>
+                                            <span class="hash-value" title="<%= tx.txid %>">
+                                                <%= formatHash(tx.txid, 24) %>
+                                                    <button class="copy-btn"
+                                                        onclick="event.stopPropagation(); copyToClipboard('<%= tx.txid %>')"
+                                                        title="Copy">
+                                                        <i class="fas fa-copy"></i>
+                                                    </button>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="/block/<%= tx.status ? tx.status.block_hash : '' %>"
+                                                class="block-height" onclick="event.stopPropagation()">
+                                                <%= formatNumber(tx.block_height || (tx.status ? tx.status.block_height
+                                                    : 0)) %>
+                                            </a>
+                                        </td>
+                                        <td class="text-muted">
+                                            <%= formatTimeAgo(tx.block_time || (tx.status ? tx.status.block_time : 0))
+                                                %>
+                                        </td>
+                                        <td>
+                                            <%= tx.vin ? tx.vin.length : 0 %>
+                                        </td>
+                                        <td>
+                                            <%= tx.vout ? tx.vout.length : 0 %>
+                                        </td>
+                                        <td><span class="badge badge-confirmed">Confirmed</span></td>
+                                    </tr>
+                                    <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+    </div>
+
+    <%- include('partials/footer') %>
