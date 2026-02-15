@@ -1,0 +1,144 @@
+<%- include('partials/header') %>
+
+    <div class="network-traffic-page">
+        <div class="page-header">
+            <h1><i class="fas fa-traffic-light"></i> Network Traffic</h1>
+            <p class="page-subtitle">Detailed network and bandwidth metrics for the <%= config.coinName %> node. For peer list see <a href="/nodes">Nodes</a>.</p>
+        </div>
+
+        <!-- Bandwidth stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">BYTES RECEIVED</span>
+                    <i class="fas fa-arrow-down stat-icon"></i>
+                </div>
+                <div class="stat-value">
+                    <%= formatBytes(netTotals.totalbytesrecv != null ? netTotals.totalbytesrecv : 0) %>
+                </div>
+                <div class="stat-note">Total since node start</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">BYTES SENT</span>
+                    <i class="fas fa-arrow-up stat-icon"></i>
+                </div>
+                <div class="stat-value">
+                    <%= formatBytes(netTotals.totalbytessent != null ? netTotals.totalbytessent : 0) %>
+                </div>
+                <div class="stat-note">Total since node start</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">RECEIVE RATE</span>
+                    <i class="fas fa-tachometer-alt stat-icon"></i>
+                </div>
+                <div class="stat-value"><%= recvRateFormatted %></div>
+                <div class="stat-note">Average since startup</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">SEND RATE</span>
+                    <i class="fas fa-tachometer-alt stat-icon"></i>
+                </div>
+                <div class="stat-value"><%= sentRateFormatted %></div>
+                <div class="stat-note">Average since startup</div>
+            </div>
+        </div>
+
+        <!-- Mempool (network load) -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">MEMPOOL TXS</span>
+                    <i class="fas fa-layer-group stat-icon"></i>
+                </div>
+                <div class="stat-value"><%= formatNumber(mempoolStats.count || 0) %></div>
+                <div class="stat-note"><%= formatBytes((mempoolStats.vsize || 0) * 1) %> vB</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">MEMPOOL FEES</span>
+                    <i class="fas fa-coins stat-icon"></i>
+                </div>
+                <div class="stat-value"><%= mempoolStats.total_fee ? (mempoolStats.total_fee / 100000000).toFixed(4) : '0' %> <%= config.coinTicker %></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">UPTIME</span>
+                    <i class="fas fa-clock stat-icon"></i>
+                </div>
+                <div class="stat-value"><%= uptimeValid ? formatUptime(uptimeSec) : '—' %></div>
+                <div class="stat-note">Since last node start</div>
+            </div>
+        </div>
+
+        <!-- Detailed network information (getnetworkinfo + getnettotals) -->
+        <div class="content-card">
+            <div class="card-header">
+                <h2><i class="fas fa-info-circle"></i> Detailed Network Information</h2>
+            </div>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="detail-label">Connections</span>
+                    <span class="detail-value"><%= formatNumber(networkInfo.connections != null ? networkInfo.connections : 0) %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Connections In</span>
+                    <span class="detail-value"><%= formatNumber(networkInfo.connections_in != null ? networkInfo.connections_in : 0) %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Connections Out</span>
+                    <span class="detail-value"><%= formatNumber(networkInfo.connections_out != null ? networkInfo.connections_out : 0) %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Network Active</span>
+                    <span class="detail-value"><%= networkInfo.networkactive ? 'Yes' : 'No' %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Protocol Version</span>
+                    <span class="detail-value"><%= networkInfo.protocolversion != null ? formatNumber(networkInfo.protocolversion) : '—' %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Version</span>
+                    <span class="detail-value"><%= networkInfo.version != null ? formatNumber(networkInfo.version) : '—' %></span>
+                </div>
+                <div class="detail-item full-width">
+                    <span class="detail-label">Subversion</span>
+                    <span class="detail-value"><%= networkInfo.subversion || '—' %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Relay Fee</span>
+                    <span class="detail-value"><%= networkInfo.relayfee != null ? (networkInfo.relayfee * 1e8).toFixed(0) + ' sat/kB' : '—' %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Incremental Fee</span>
+                    <span class="detail-value"><%= networkInfo.incrementalfee != null ? (networkInfo.incrementalfee * 1e8).toFixed(0) + ' sat/kB' : '—' %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Total Bytes Received</span>
+                    <span class="detail-value"><%= formatBytes(netTotals.totalbytesrecv != null ? netTotals.totalbytesrecv : 0) %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Total Bytes Sent</span>
+                    <span class="detail-value"><%= formatBytes(netTotals.totalbytessent != null ? netTotals.totalbytessent : 0) %></span>
+                </div>
+                <% if (uptimeValid) { %>
+                <div class="detail-item">
+                    <span class="detail-label">Uptime</span>
+                    <span class="detail-value"><%= formatUptime(uptimeSec) %></span>
+                </div>
+                <% } %>
+                <% if (networkInfo.warnings && networkInfo.warnings.length > 0) { %>
+                <div class="detail-item full-width">
+                    <span class="detail-label">Warnings</span>
+                    <span class="detail-value text-warning"><%= networkInfo.warnings %></span>
+                </div>
+                <% } %>
+            </div>
+        </div>
+
+        <p class="page-footer-note">Peers and node list are on the <a href="/nodes">Nodes</a> tab.</p>
+    </div>
+
+<%- include('partials/footer') %>

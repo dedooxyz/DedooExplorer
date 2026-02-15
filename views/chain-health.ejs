@@ -1,0 +1,186 @@
+<%- include('partials/header') %>
+
+    <div class="chain-health-page">
+        <div class="page-header">
+            <h1><i class="fas fa-heartbeat"></i> Chain Health & Sync Status</h1>
+            <p class="page-subtitle">Monitor blockchain synchronization and network health</p>
+        </div>
+
+        <!-- Health Status -->
+        <div class="stats-grid">
+            <div class="stat-card <%= isSynced ? 'stat-card-success' : 'stat-card-warning' %>">
+                <div class="stat-header">
+                    <span class="stat-label">SYNC STATUS</span>
+                    <i class="fas fa-<%= isSynced ? 'check-circle' : 'exclamation-triangle' %> stat-icon"></i>
+                </div>
+                <div class="stat-value">
+                    <%= isSynced ? 'Synced' : 'Syncing' %>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">VERIFICATION PROGRESS</span>
+                    <i class="fas fa-tasks stat-icon"></i>
+                </div>
+                <div class="stat-value"><%= syncProgress %>%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">BLOCKS BEHIND</span>
+                    <i class="fas fa-clock stat-icon"></i>
+                </div>
+                <div class="stat-value"><%= formatNumber(blocksBehind) %></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">CURRENT HEIGHT</span>
+                    <i class="fas fa-cube stat-icon"></i>
+                </div>
+                <div class="stat-value"><%= formatNumber(blockchainInfo.blocks || tipHeight) %></div>
+            </div>
+        </div>
+
+        <!-- Blockchain Info -->
+        <div class="content-card">
+            <div class="card-header">
+                <h2><i class="fas fa-info-circle"></i> Blockchain Information</h2>
+            </div>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="detail-label">Chain</span>
+                    <span class="detail-value"><%= blockchainInfo.chain || 'main' %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Blocks</span>
+                    <span class="detail-value"><%= formatNumber(blockchainInfo.blocks || 0) %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Headers</span>
+                    <span class="detail-value"><%= formatNumber(blockchainInfo.headers || 0) %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Best Block Hash</span>
+                    <span class="detail-value hash-mono">
+                        <a href="/block/<%= blockchainInfo.bestblockhash %>">
+                            <%= formatHash(blockchainInfo.bestblockhash || '', 20) %>
+                        </a>
+                    </span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Difficulty</span>
+                    <span class="detail-value"><%= formatDifficulty(blockchainInfo.difficulty || 0) %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Median Time</span>
+                    <span class="detail-value"><%= blockchainInfo.mediantime ? formatDate(blockchainInfo.mediantime) : '--' %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Verification Progress</span>
+                    <span class="detail-value"><%= syncProgress %>%</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Chainwork</span>
+                    <span class="detail-value hash-mono"><%= blockchainInfo.chainwork || '--' %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Pruned</span>
+                    <span class="detail-value"><%= blockchainInfo.pruned ? 'Yes' : 'No' %></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Network Info -->
+        <div class="content-card">
+            <div class="card-header">
+                <h2><i class="fas fa-network-wired"></i> Network Information</h2>
+            </div>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="detail-label">Version</span>
+                    <span class="detail-value"><%= networkInfo.version || '--' %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Subversion</span>
+                    <span class="detail-value"><%= networkInfo.subversion || '--' %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Connections</span>
+                    <span class="detail-value"><%= formatNumber(networkInfo.connections || 0) %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Network Active</span>
+                    <span class="detail-value"><%= networkInfo.networkactive ? 'Yes' : 'No' %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Relay Fee</span>
+                    <span class="detail-value"><%= networkInfo.relayfee ? (networkInfo.relayfee * 1e8).toFixed(0) + ' sat/kB' : '--' %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Incremental Fee</span>
+                    <span class="detail-value"><%= networkInfo.incrementalfee ? (networkInfo.incrementalfee * 1e8).toFixed(0) + ' sat/kB' : '--' %></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mining Info -->
+        <% if (miningInfo && Object.keys(miningInfo).length > 0) { %>
+        <div class="content-card">
+            <div class="card-header">
+                <h2><i class="fas fa-hammer"></i> Mining Information</h2>
+            </div>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="detail-label">Network Hashrate</span>
+                    <span class="detail-value"><%= formatHashrate(miningInfo.networkhashps || 0) %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Difficulty</span>
+                    <span class="detail-value"><%= formatDifficulty(miningInfo.difficulty || 0) %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Blocks</span>
+                    <span class="detail-value"><%= formatNumber(miningInfo.blocks || 0) %></span>
+                </div>
+            </div>
+        </div>
+        <% } %>
+
+        <!-- Soft Forks -->
+        <% if (blockchainInfo.softforks && blockchainInfo.softforks.length > 0) { %>
+        <div class="content-card">
+            <div class="card-header">
+                <h2><i class="fas fa-code-branch"></i> Soft Forks</h2>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Version</th>
+                            <th>Status</th>
+                            <th>Found</th>
+                            <th>Required</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% blockchainInfo.softforks.forEach(function(fork) { %>
+                            <tr>
+                                <td><%= fork.id %></td>
+                                <td><%= fork.version %></td>
+                                <td>
+                                    <span class="badge badge-<%= fork.enforce && fork.enforce.status ? 'confirmed' : 'pending' %>">
+                                        <%= fork.enforce && fork.enforce.status ? 'Enforced' : 'Pending' %>
+                                    </span>
+                                </td>
+                                <td><%= fork.enforce ? fork.enforce.found : '--' %> / <%= fork.enforce ? fork.enforce.window : '--' %></td>
+                                <td><%= fork.enforce ? fork.enforce.required : '--' %></td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <% } %>
+    </div>
+
+<%- include('partials/footer') %>

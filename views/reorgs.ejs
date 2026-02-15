@@ -1,0 +1,112 @@
+<%- include('partials/header') %>
+
+    <div class="reorgs-page">
+        <div class="page-header">
+            <h1><i class="fas fa-exchange-alt"></i> Reorganization History</h1>
+            <p class="page-subtitle">Track chain reorganizations and fork events</p>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">POTENTIAL REOGS</span>
+                    <i class="fas fa-exclamation-triangle stat-icon"></i>
+                </div>
+                <div class="stat-value"><%= formatNumber(reorgs.length) %></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">MAX BRANCH LENGTH</span>
+                    <i class="fas fa-code-branch stat-icon"></i>
+                </div>
+                <div class="stat-value">
+                    <%= reorgs.length > 0 ? formatNumber(Math.max.apply(null, reorgs.map(function(r) { return r.branchlen; }))) : '0' %>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">MAIN CHAIN HEIGHT</span>
+                    <i class="fas fa-cube stat-icon"></i>
+                </div>
+                <div class="stat-value"><%= formatNumber(tipHeight) %></div>
+            </div>
+        </div>
+
+        <!-- Reorgs Table -->
+        <div class="content-card">
+            <div class="card-header">
+                <h2><i class="fas fa-history"></i> Reorganization Events</h2>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Fork Height</th>
+                            <th>Tip Height</th>
+                            <th>Tip Hash</th>
+                            <th>Branch Length</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (!reorgs || reorgs.length === 0) { %>
+                            <tr>
+                                <td colspan="5" class="empty-state">
+                                    <i class="fas fa-check-circle"></i>
+                                    <p>No reorganizations detected. Chain is stable.</p>
+                                </td>
+                            </tr>
+                        <% } else { %>
+                            <% reorgs.forEach(function(reorg) { %>
+                                <tr class="warning-row">
+                                    <td><span class="block-height"><%= formatNumber(reorg.forkHeight) %></span></td>
+                                    <td><span class="block-height"><%= formatNumber(reorg.height) %></span></td>
+                                    <td>
+                                        <a href="/block/<%= reorg.hash %>" class="hash-value" title="<%= reorg.hash %>">
+                                            <%= formatHash(reorg.hash, 20) %>
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-pending"><%= formatNumber(reorg.branchlen) %> blocks</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-<%= reorg.status === 'valid-fork' ? 'pending' : 'info' %>">
+                                            <%= reorg.status %>
+                                        </span>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Info Card -->
+        <div class="content-card">
+            <div class="card-header">
+                <h2><i class="fas fa-info-circle"></i> About Reorganizations</h2>
+            </div>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="detail-label">What is a Reorg?</span>
+                    <span class="detail-value">When a longer chain replaces the current chain, causing blocks to be removed</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Branch Length</span>
+                    <span class="detail-value">Number of blocks in the alternative chain branch</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Fork Height</span>
+                    <span class="detail-value">Block height where the chain split occurred</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Impact</span>
+                    <span class="detail-value">Small reorgs (&lt;6 blocks) are normal, larger ones may indicate issues</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,104 @@
+<%- include('partials/header') %>
+
+    <div class="glossary-page">
+        <div class="page-header">
+            <h1><i class="fas fa-book"></i> Glossary &amp; FAQ</h1>
+            <p class="page-subtitle">Definitions and frequently asked questions about <%= config.coinName %> and this explorer</p>
+        </div>
+
+        <!-- Glossary -->
+        <div class="content-card">
+            <div class="card-header">
+                <h2><i class="fas fa-list-ul"></i> Glossary</h2>
+            </div>
+            <div class="glossary-list">
+                <div class="glossary-term">
+                    <span class="term-name">Address</span>
+                    <span class="term-desc">A string (e.g. starting with a letter or number) that represents a destination for <%= config.coinTicker %>. You share your address to receive funds. Never share your private key.</span>
+                </div>
+                <div class="glossary-term">
+                    <span class="term-name">Block</span>
+                    <span class="term-desc">A batch of transactions and metadata (timestamp, previous block hash, nonce, etc.) secured by proof of work. Blocks are chained together to form the blockchain.</span>
+                </div>
+                <div class="glossary-term">
+                    <span class="term-name">Block height</span>
+                    <span class="term-desc">The number of blocks from the genesis (first) block. Height 0 is the genesis block; the latest block has the highest height.</span>
+                </div>
+                <div class="glossary-term">
+                    <span class="term-name">Block reward</span>
+                    <span class="term-desc">New <%= config.coinTicker %> created in each block and paid to the miner via the coinbase transaction. This reward halves at fixed intervals (halving).</span>
+                </div>
+                <div class="glossary-term">
+                    <span class="term-name">Confirmation</span>
+                    <span class="term-desc">A transaction has one confirmation when it is in the latest block, two when another block is mined on top, and so on. More confirmations mean stronger assurance the transaction is final.</span>
+                </div>
+                <div class="glossary-term">
+                    <span class="term-name">Difficulty</span>
+                    <span class="term-desc">A measure of how hard it is to find a valid block. The network adjusts difficulty so that blocks are found roughly every target interval (e.g. <%= config.blockTime %> seconds).</span>
+                </div>
+                <div class="glossary-term">
+                    <span class="term-name">Halving</span>
+                    <span class="term-desc">A scheduled event that cuts the block reward in half. It happens at fixed block intervals (e.g. every 210,000 blocks) to control inflation.</span>
+                </div>
+                <div class="glossary-term">
+                    <span class="term-name">Hashrate</span>
+                    <span class="term-desc">The total number of hash attempts per second by the network (e.g. TH/s). Higher hashrate means more security and more mining power competing for blocks.</span>
+                </div>
+                <div class="glossary-term">
+                    <span class="term-name">Mempool</span>
+                    <span class="term-desc">The set of unconfirmed transactions that nodes have received and are waiting to be included in a block. Miners typically choose transactions from the mempool when building blocks.</span>
+                </div>
+                <div class="glossary-term">
+                    <span class="term-name">Miner</span>
+                    <span class="term-desc">A participant who runs hardware (or software) to solve proof-of-work puzzles. The first to find a valid block receives the block reward and transaction fees.</span>
+                </div>
+                <div class="glossary-term">
+                    <span class="term-name">Reorganization (reorg)</span>
+                    <span class="term-desc">When the network abandons the previous tip and adopts a longer or heavier chain. Some blocks that were considered “confirmed” can become invalid. Small reorgs (e.g. 1–2 blocks) are rare but possible.</span>
+                </div>
+                <div class="glossary-term">
+                    <span class="term-name">Transaction (tx)</span>
+                    <span class="term-desc">A signed message that moves <%= config.coinTicker %> from one or more inputs (previous outputs) to one or more outputs (addresses and amounts). Stored in blocks after being confirmed.</span>
+                </div>
+                <div class="glossary-term">
+                    <span class="term-name">UTXO</span>
+                    <span class="term-desc">Unspent Transaction Output. The blockchain tracks outputs that have not yet been spent. Your “balance” is the sum of UTXOs that your addresses can spend.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAQ -->
+        <div class="content-card">
+            <div class="card-header">
+                <h2><i class="fas fa-question-circle"></i> Frequently Asked Questions</h2>
+            </div>
+            <div class="faq-list">
+                <div class="faq-item">
+                    <h3 class="faq-q">How do I find my transaction?</h3>
+                    <p class="faq-a">Use the search bar at the top: paste your transaction ID (txid) or address. You can also go to <a href="/transactions">Transactions</a> to browse recent and mempool transactions.</p>
+                </div>
+                <div class="faq-item">
+                    <h3 class="faq-q">What does “unconfirmed” mean?</h3>
+                    <p class="faq-a">The transaction is in the mempool but not yet included in a block. After it is mined into a block, it becomes confirmed. More blocks on top of it mean more confirmations.</p>
+                </div>
+                <div class="faq-item">
+                    <h3 class="faq-q">How is the rich list / balance calculated?</h3>
+                    <p class="faq-a">The <a href="/richlist">Rich List</a> and address balances are based on the sum of UTXOs (unspent outputs) that belong to each address. They require the indexer to be running.</p>
+                </div>
+                <div class="faq-item">
+                    <h3 class="faq-q">Where does the hashrate come from?</h3>
+                    <p class="faq-a">The explorer gets network hashrate from the node’s <code>getmininginfo</code> RPC (networkhashps). It reflects the estimated total hashing power securing the chain.</p>
+                </div>
+                <div class="faq-item">
+                    <h3 class="faq-q">What are chain tips and reorgs?</h3>
+                    <p class="faq-a">Chain tips are the ends of known chains (including the main chain and any forks). A reorg happens when the main chain switches to a different tip, undoing some recent blocks. See <a href="/chain-tips">Chain Tips</a> and <a href="/reorgs">Reorgs</a> for details.</p>
+                </div>
+                <div class="faq-item">
+                    <h3 class="faq-q">Can I use the explorer API?</h3>
+                    <p class="faq-a">Yes. The explorer proxies blockchain data; see <a href="/api-docs">API</a> for endpoints. Typical usage: blocks, transactions, addresses, and mempool.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<%- include('partials/footer') %>

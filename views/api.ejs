@@ -1,0 +1,210 @@
+<%- include('partials/header') %>
+
+    <div class="api-page">
+        <div class="page-header">
+            <h1><i class="fas fa-code"></i> API</h1>
+            <p class="page-subtitle">Electrs REST API for <%= config.coinName %>. All amounts in satoshis.</p>
+        </div>
+
+        <div class="content-card api-docs-card">
+            <div class="card-header">
+                <h2><i class="fas fa-link"></i> Base URL</h2>
+                <div class="api-base-url">
+                    <code id="api-base-url"><%= baseUrl %></code>
+                    <button class="copy-btn" onclick="copyToClipboard('<%= baseUrl %>')" title="Copy">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Blocks -->
+            <div class="api-section">
+                <h3><i class="fas fa-cube"></i> Blocks</h3>
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>
+                    <code>/blocks</code>
+                    <p>10 newest blocks. Add <code>/:start_height</code> for blocks starting at height.</p>
+                    <div class="api-example">
+                        <code>curl <%= baseUrl %>/blocks</code>
+                        <button class="copy-btn-sm" onclick="copyToClipboard('<%= baseUrl %>/blocks')"><i class="fas fa-copy"></i></button>
+                    </div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>
+                    <code>/blocks/tip/height</code>
+                    <p>Current block height.</p>
+                    <div class="api-example">
+                        <code>curl <%= baseUrl %>/blocks/tip/height</code>
+                        <button class="copy-btn-sm" onclick="copyToClipboard('<%= baseUrl %>/blocks/tip/height')"><i class="fas fa-copy"></i></button>
+                    </div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>
+                    <code>/blocks/tip/hash</code>
+                    <p>Current block hash.</p>
+                    <div class="api-example">
+                        <code>curl <%= baseUrl %>/blocks/tip/hash</code>
+                        <button class="copy-btn-sm" onclick="copyToClipboard('<%= baseUrl %>/blocks/tip/hash')"><i class="fas fa-copy"></i></button>
+                    </div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>
+                    <code>/block/:hash</code>
+                    <p>Block info by hash.</p>
+                    <div class="api-example">
+                        <code>curl <%= baseUrl %>/block/&lt;hash&gt;</code>
+                        <button class="copy-btn-sm" onclick="copyToClipboard('<%= baseUrl %>/block/')"><i class="fas fa-copy"></i></button>
+                    </div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>
+                    <code>/block/:hash/txs/:start_index</code>
+                    <p>Transactions in block (25 per page, start_index must be multiple of 25).</p>
+                    <div class="api-example">
+                        <code>curl <%= baseUrl %>/block/&lt;hash&gt;/txs/0</code>
+                        <button class="copy-btn-sm" onclick="copyToClipboard('<%= baseUrl %>/block/')"><i class="fas fa-copy"></i></button>
+                    </div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>
+                    <code>/block-height/:height</code>
+                    <p>Block hash at given height.</p>
+                    <div class="api-example">
+                        <code>curl <%= baseUrl %>/block-height/15800</code>
+                        <button class="copy-btn-sm" onclick="copyToClipboard('<%= baseUrl %>/block-height/15800')"><i class="fas fa-copy"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transactions -->
+            <div class="api-section">
+                <h3><i class="fas fa-exchange-alt"></i> Transactions</h3>
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>
+                    <code>/tx/:txid</code>
+                    <p>Transaction details.</p>
+                    <div class="api-example">
+                        <code>curl <%= baseUrl %>/tx/&lt;txid&gt;</code>
+                        <button class="copy-btn-sm" onclick="copyToClipboard('<%= baseUrl %>/tx/')"><i class="fas fa-copy"></i></button>
+                    </div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>
+                    <code>/tx/:txid/status</code>
+                    <p>Transaction confirmation status.</p>
+                    <div class="api-example">
+                        <code>curl <%= baseUrl %>/tx/&lt;txid&gt;/status</code>
+                        <button class="copy-btn-sm" onclick="copyToClipboard('<%= baseUrl %>/tx/')"><i class="fas fa-copy"></i></button>
+                    </div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>
+                    <code>/tx/:txid/hex</code>
+                    <p>Raw transaction hex.</p>
+                </div>
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>
+                    <code>/tx/:txid/outspends</code>
+                    <p>Spending status of all outputs.</p>
+                </div>
+                <div class="api-endpoint">
+                    <span class="method post">POST</span>
+                    <code>/tx</code>
+                    <p>Broadcast raw transaction (hex in body).</p>
+                    <div class="api-example">
+                        <code>curl -X POST <%= baseUrl %>/tx -d "02000000..."</code>
+                        <button class="copy-btn-sm" onclick="copyToClipboard('curl -X POST <%= baseUrl %>/tx -d \"02000000...\"')"><i class="fas fa-copy"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Addresses -->
+            <div class="api-section">
+                <h3><i class="fas fa-wallet"></i> Addresses</h3>
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>
+                    <code>/address/:address</code>
+                    <p>Address stats (chain_stats, mempool_stats).</p>
+                    <div class="api-example">
+                        <code>curl <%= baseUrl %>/address/&lt;address&gt;</code>
+                        <button class="copy-btn-sm" onclick="copyToClipboard('<%= baseUrl %>/address/')"><i class="fas fa-copy"></i></button>
+                    </div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>
+                    <code>/address/:address/txs</code>
+                    <p>Transaction history (50 mempool + 25 confirmed). Add <code>?start_index=N&limit=25</code> for pagination.</p>
+                    <div class="api-example">
+                        <code>curl "<%= baseUrl %>/address/&lt;address&gt;/txs?start_index=0&limit=25"</code>
+                        <button class="copy-btn-sm" onclick="copyToClipboard('<%= baseUrl %>/address/')"><i class="fas fa-copy"></i></button>
+                    </div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>
+                    <code>/address/:address/utxo</code>
+                    <p>Unspent outputs. Add <code>?start_index=N&limit=25</code> for pagination.</p>
+                    <div class="api-example">
+                        <code>curl "<%= baseUrl %>/address/&lt;address&gt;/utxo?start_index=0&limit=25"</code>
+                        <button class="copy-btn-sm" onclick="copyToClipboard('<%= baseUrl %>/address/')"><i class="fas fa-copy"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mempool -->
+            <div class="api-section">
+                <h3><i class="fas fa-layer-group"></i> Mempool</h3>
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>
+                    <code>/mempool</code>
+                    <p>Mempool stats (count, vsize, total_fee, fee_histogram).</p>
+                    <div class="api-example">
+                        <code>curl <%= baseUrl %>/mempool</code>
+                        <button class="copy-btn-sm" onclick="copyToClipboard('<%= baseUrl %>/mempool')"><i class="fas fa-copy"></i></button>
+                    </div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>
+                    <code>/mempool/recent</code>
+                    <p>Last 10 transactions to enter mempool.</p>
+                    <div class="api-example">
+                        <code>curl <%= baseUrl %>/mempool/recent</code>
+                        <button class="copy-btn-sm" onclick="copyToClipboard('<%= baseUrl %>/mempool/recent')"><i class="fas fa-copy"></i></button>
+                    </div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>
+                    <code>/mempool/txids</code>
+                    <p>All txids in mempool.</p>
+                </div>
+            </div>
+
+            <!-- Fee & Supply -->
+            <div class="api-section">
+                <h3><i class="fas fa-coins"></i> Fee & Supply</h3>
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>
+                    <code>/fee-estimates</code>
+                    <p>Fee estimates by confirmation target (sat/vB).</p>
+                    <div class="api-example">
+                        <code>curl <%= baseUrl %>/fee-estimates</code>
+                        <button class="copy-btn-sm" onclick="copyToClipboard('<%= baseUrl %>/fee-estimates')"><i class="fas fa-copy"></i></button>
+                    </div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>
+                    <code>/blockchain/getsupply</code>
+                    <p>Total supply (if supported by backend).</p>
+                    <div class="api-example">
+                        <code>curl <%= baseUrl %>/blockchain/getsupply</code>
+                        <button class="copy-btn-sm" onclick="copyToClipboard('<%= baseUrl %>/blockchain/getsupply')"><i class="fas fa-copy"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="api-footer">
+                <p><i class="fas fa-info-circle"></i> Compatible with Esplora/electrs API. See <a href="https://github.com/Blockstream/esplora/blob/master/API.md" target="_blank" rel="noopener">Esplora API docs</a> for full reference.</p>
+            </div>
+        </div>
+    </div>
+
+<%- include('partials/footer') %>

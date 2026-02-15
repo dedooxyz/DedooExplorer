@@ -85,6 +85,7 @@ function formatBytes(bytes) {
 
 // Format hashrate
 function formatHashrate(hashrate) {
+    if (hashrate == null || !Number.isFinite(hashrate) || hashrate < 0) return '0 H/s';
     if (hashrate >= 1e18) return (hashrate / 1e18).toFixed(2) + ' EH/s';
     if (hashrate >= 1e15) return (hashrate / 1e15).toFixed(2) + ' PH/s';
     if (hashrate >= 1e12) return (hashrate / 1e12).toFixed(2) + ' TH/s';
@@ -148,6 +149,43 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // Mobile nav toggle - hamburger modal (scrollable list)
+    const navToggle = document.querySelector('.nav-toggle');
+    const navModal = document.getElementById('nav-links');  // .nav-modal-panel
+    const navBackdrop = document.getElementById('nav-backdrop');
+    const navCloseBtn = document.getElementById('nav-close-btn');
+
+    function closeNavModal() {
+        if (navModal) navModal.classList.remove('open');
+        if (navBackdrop) navBackdrop.classList.remove('open');
+        if (navToggle) navToggle.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+    }
+
+    if (navToggle && navModal) {
+        navToggle.addEventListener('click', () => {
+            const isOpen = navModal.classList.toggle('open');
+            if (navBackdrop) navBackdrop.classList.toggle('open', isOpen);
+            navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            document.body.style.overflow = isOpen ? 'hidden' : '';
+        });
+    }
+
+    if (navBackdrop) navBackdrop.addEventListener('click', closeNavModal);
+    if (navCloseBtn) navCloseBtn.addEventListener('click', closeNavModal);
+
+    if (navModal) {
+        navModal.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', closeNavModal);
+        });
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && navModal && navModal.classList.contains('open')) {
+            closeNavModal();
+        }
+    });
 
     // Start auto-refresh on dashboard
     startAutoRefresh();

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="<%= config.explorerName %> - Supply Flow Analysis for <%= config.coinName %>">
+    <link rel="icon" href="<%= config.logoUrl %>" type="image/svg+xml">
+    <title>Supply Flow | <%= config.explorerName %></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <script>
+        // Initialize theme from localStorage before render to prevent flash
+        (function () {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+
+    <%- include('partials/header', { page: 'supply-flow' }) %>
+
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-project-diagram"></i>
+                Supply Flow Analysis
+            </h1>
+            <p class="page-subtitle">Historical and projected circulating supply trends for <%= config.coinName %></p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value"><%= circulatingSupply.toLocaleString() %></div>
+                    <div class="stat-label">Current Circulating Supply</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-cube"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value"><%= tipHeight.toLocaleString() %></div>
+                    <div class="stat-label">Current Block Height</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value"><%= Math.round(144 * 365.25) %></div>
+                    <div class="stat-label">Blocks per Year</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value"><%= dailySupplyIncrease.toLocaleString() %></div>
+                    <div class="stat-label">Daily Supply Increase</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Supply Growth Chart -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-chart-area"></i>
+                    Supply Growth Projection
+                </h2>
+                <p class="card-subtitle">Historical data combined with future projections</p>
+            </div>
+            <div class="card-content">
+                <canvas id="supplyChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- Monthly Projections Table -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-table"></i>
+                    Monthly Projections
+                </h2>
+                <p class="card-subtitle">Detailed breakdown of supply growth over the next year</p>
+            </div>
+            <div class="card-content">
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Days</th>
+                                <th>Date</th>
+                                <th>Projected Supply</th>
+                                <th>Monthly Increase</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% projectionData.forEach((row, index) => { %>
+                            <tr>
+                                <td><%= row.days %></td>
+                                <td><%= row.date %></td>
+                                <td><%= row.supply.toLocaleString() %></td>
+                                <td><%= index > 0 ? (row.supply - projectionData[index-1].supply).toLocaleString() : '0' %></td>
+                            </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>
+
+    <script>
+        // Chart.js configuration for supply growth
+        const ctx = document.getElementById('supplyChart').getContext('2d');
+
+        // Prepare chart data (projections only for now)
+        const chartData = {
+            labels: [
+                '<%= new Date().toLocaleDateString() %>', // Today
+                <% projectionData.forEach(row => { %>
+                    '<%= row.date %>',
+                <% }); %>
+            ],
+            datasets: [{
+                label: 'Circulating Supply',
+                data: [
+                    <%= circulatingSupply %>, // Current supply
+                    <% projectionData.forEach(row => { %>
+                        <%= row.supply %>,
+                    <% }); %>
+                ],
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1,
+                fill: true
+            }]
+        };
+
+        const supplyChart = new Chart(ctx, {
+            type: 'line',
+            data: chartData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Supply Growth Over Time'
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        }
+                    },
+                    y: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Circulating Supply'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Theme toggle functionality
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            const themeIcon = document.getElementById('theme-icon');
+            if (newTheme === 'dark') {
+                themeIcon.className = 'fas fa-moon';
+            } else {
+                themeIcon.className = 'fas fa-sun';
+            }
+        }
+
+        // Navigation toggle functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const navToggle = document.querySelector('.nav-toggle');
+            const navBackdrop = document.getElementById('nav-backdrop');
+            const navLinks = document.getElementById('nav-links');
+            const navCloseBtn = document.getElementById('nav-close-btn');
+
+            function toggleNav() {
+                const isOpen = navBackdrop.getAttribute('aria-hidden') === 'false';
+                navBackdrop.setAttribute('aria-hidden', isOpen);
+                navLinks.setAttribute('aria-hidden', isOpen);
+                navToggle.setAttribute('aria-expanded', !isOpen);
+                document.body.classList.toggle('nav-open', !isOpen);
+            }
+
+            navToggle.addEventListener('click', toggleNav);
+            navBackdrop.addEventListener('click', toggleNav);
+            navCloseBtn.addEventListener('click', toggleNav);
+        });
+    </script>
+</body>
+</html>

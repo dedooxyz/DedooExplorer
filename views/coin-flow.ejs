@@ -1,0 +1,94 @@
+<%- include('partials/header') %>
+
+    <div class="coin-flow-page">
+        <div class="page-header">
+            <h1><i class="fas fa-project-diagram"></i> Coin Flow</h1>
+            <p class="page-subtitle">See money moving from address to address — the flow of coins on the <%= config.coinName %> blockchain.</p>
+        </div>
+
+        <div class="content-card">
+            <div class="card-header">
+                <h2><i class="fas fa-exchange-alt"></i> Recent Transfers</h2>
+                <span class="badge">
+                    <%= typeof total === 'number' ? formatNumber(total) : '0' %> transactions · page <%= (currentPage || 0) + 1 %> of <%= totalPages || 1 %>
+                </span>
+            </div>
+
+            <div class="flow-list">
+                <% if (!flows || flows.length === 0) { %>
+                    <p class="empty-state">No transactions to show. Try again later.</p>
+                <% } else { %>
+                    <% flows.forEach(function(flow) {
+                        const totalOut = (flow.to || []).reduce(function(s, o) { return s + (o.value || 0); }, 0);
+                    %>
+                        <div class="flow-item" onclick="window.location='/tx/<%= flow.txid %>'">
+                            <div class="flow-meta">
+                                <span class="flow-time" title="<%= flow.blockTime ? new Date(flow.blockTime * 1000).toISOString() : '' %>">
+                                    <%= flow.blockTime ? formatDate(flow.blockTime) : 'Pending' %>
+                                </span>
+                                <% if (flow.blockHeight != null) { %>
+                                    <a href="/block/<%= flow.blockHeight %>" class="flow-block" onclick="event.stopPropagation()">#<%= formatNumber(flow.blockHeight) %></a>
+                                <% } %>
+                            </div>
+                            <div class="flow-arrow-row">
+                                <div class="flow-from">
+                                    <span class="flow-label">From</span>
+                                    <div class="flow-addresses">
+                                        <% (flow.from || []).forEach(function(f) { %>
+                                            <% if (f.coinbase) { %>
+                                                <span class="flow-addr coinbase"><i class="fas fa-gem"></i> Coinbase</span>
+                                            <% } else { %>
+                                                <a href="/address/<%= f.address %>" class="flow-addr" onclick="event.stopPropagation()" title="<%= f.address %>"><%= formatHash(f.address, 16) %></a>
+                                                <span class="flow-amount"><%= f.value != null ? (f.value / 100000000).toFixed(8) : '0' %> <%= config.coinTicker %></span>
+                                            <% } %>
+                                        <% }); %>
+                                        <% if ((flow.from || []).length === 0) { %><span class="text-muted">—</span><% } %>
+                                    </div>
+                                </div>
+                                <div class="flow-arrow"><i class="fas fa-arrow-right"></i></div>
+                                <div class="flow-to">
+                                    <span class="flow-label">To</span>
+                                    <div class="flow-addresses">
+                                        <% (flow.to || []).forEach(function(t) { %>
+                                            <a href="/address/<%= t.address %>" class="flow-addr" onclick="event.stopPropagation()" title="<%= t.address %>"><%= formatHash(t.address, 16) %></a>
+                                            <span class="flow-amount"><%= t.value != null ? (t.value / 100000000).toFixed(8) : '0' %> <%= config.coinTicker %></span>
+                                        <% }); %>
+                                        <% if ((flow.to || []).length === 0) { %><span class="text-muted">—</span><% } %>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flow-total">
+                                <strong><%= (totalOut / 100000000).toFixed(8) %> <%= config.coinTicker %></strong>
+                                <% if (flow.fee != null) { %>
+                                    <span class="flow-fee">Fee: <%= (flow.fee / 100000000).toFixed(8) %> <%= config.coinTicker %></span>
+                                <% } %>
+                            </div>
+                            <div class="flow-txid">
+                                <a href="/tx/<%= flow.txid %>" onclick="event.stopPropagation()" class="hash-value"><%= formatHash(flow.txid, 20) %></a>
+                                <button class="copy-btn" onclick="event.stopPropagation(); copyToClipboard('<%= flow.txid %>')" title="Copy"><i class="fas fa-copy"></i></button>
+                            </div>
+                        </div>
+                    <% }); %>
+                <% } %>
+            </div>
+
+            <% if (totalPages > 1) { %>
+                <div class="pagination-bar">
+                    <% const prevPage = (currentPage || 0) - 1; const nextPage = (currentPage || 0) + 1; %>
+                    <% if (prevPage >= 0) { %>
+                        <a href="/coin-flow?page=<%= prevPage %>" class="pagination-btn"><i class="fas fa-chevron-left"></i> Previous</a>
+                    <% } else { %>
+                        <span class="pagination-btn disabled"><i class="fas fa-chevron-left"></i> Previous</span>
+                    <% } %>
+                    <span class="pagination-info">Page <%= (currentPage || 0) + 1 %> of <%= totalPages %></span>
+                    <% if (nextPage < totalPages) { %>
+                        <a href="/coin-flow?page=<%= nextPage %>" class="pagination-btn">Next <i class="fas fa-chevron-right"></i></a>
+                    <% } else { %>
+                        <span class="pagination-btn disabled">Next <i class="fas fa-chevron-right"></i></span>
+                    <% } %>
+                </div>
+            <% } %>
+        </div>
+    </div>
+
+<%- include('partials/footer') %>

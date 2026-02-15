@@ -1,0 +1,113 @@
+<%- include('partials/header') %>
+
+    <div class="emission-page">
+        <div class="page-header">
+            <h1><i class="fas fa-coins"></i> Emission &amp; Halving</h1>
+            <p class="page-subtitle">Block reward schedule and total supply for <%= config.coinName %>.</p>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">CURRENT HEIGHT</span>
+                    <i class="fas fa-cube stat-icon"></i>
+                </div>
+                <div class="stat-value"><%= formatNumber(currentHeight) %></div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">CURRENT BLOCK REWARD</span>
+                    <i class="fas fa-gift stat-icon"></i>
+                </div>
+                <div class="stat-value">
+                    <%= currentReward.toFixed(2) %>
+                    <span class="currency"><%= config.coinTicker %></span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">NEXT HALVING AT</span>
+                    <i class="fas fa-hourglass-half stat-icon"></i>
+                </div>
+                <div class="stat-value">
+                    <%= formatNumber(nextHalvingHeight) %>
+                </div>
+                <div class="stat-footer">
+                    <% if (blocksToHalving > 0) { %>
+                        <span class="detail-value"><%= formatNumber(blocksToHalving) %> blocks remaining</span>
+                        <% if (estimatedHalvingDate) { %>
+                            <span class="detail-value">~ <%= estimatedHalvingDate %></span>
+                        <% } %>
+                    <% } else { %>
+                        <span class="detail-value">All scheduled halvings passed for displayed epochs.</span>
+                    <% } %>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">SUPPLY</span>
+                    <i class="fas fa-chart-area stat-icon"></i>
+                </div>
+                <div class="stat-value">
+                    <% if (actualSupply) { %>
+                        <%= formatNumber(Math.round(actualSupply)) %>
+                        <span class="currency"><%= config.coinTicker %></span>
+                    <% } else { %>
+                        <span class="currency">N/A</span>
+                    <% } %>
+                </div>
+                <div class="stat-footer">
+                    <span class="detail-value">Theoretical max: ~<%= formatNumber(Math.round(theoreticalMaxSupply)) %> <%= config.coinTicker %></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Halving Schedule -->
+        <div class="content-card">
+            <div class="card-header">
+                <h2><i class="fas fa-road"></i> Halving Schedule (interval <%= formatNumber(halvingInterval) %> blocks)</h2>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Epoch</th>
+                            <th>Reward (per block)</th>
+                            <th>Block Range</th>
+                            <th>Blocks</th>
+                            <th>Coins This Epoch</th>
+                            <th>Cumulative Supply</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (!epochs || epochs.length === 0) { %>
+                            <tr>
+                                <td colspan="6" class="empty-state">
+                                    <i class="fas fa-inbox"></i>
+                                    <p>No halving schedule data.</p>
+                                </td>
+                            </tr>
+                        <% } else { %>
+                            <% epochs.forEach(function(e) { %>
+                                <tr>
+                                    <td>#<%= e.epoch %></td>
+                                    <td><%= e.reward.toFixed(2) %> <%= config.coinTicker %></td>
+                                    <td><%= formatNumber(e.startHeight) %> - <%= formatNumber(e.endHeight) %></td>
+                                    <td><%= formatNumber(e.blocksInEpoch) %></td>
+                                    <td><%= formatNumber(Math.round(e.coinsThisEpoch)) %> <%= config.coinTicker %></td>
+                                    <td><%= formatNumber(Math.round(e.cumulativeSupply)) %> <%= config.coinTicker %></td>
+                                </tr>
+                            <% }); %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+<%- include('partials/footer') %>
+

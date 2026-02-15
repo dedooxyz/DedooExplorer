@@ -81,10 +81,10 @@
                             </span>
                         </div>
 
-                        <div class="detail-item">
+                        <div class="detail-item full-width">
                             <span class="detail-label">Locktime</span>
                             <span class="detail-value">
-                                <%= tx.locktime %>
+                                <%= tx.locktime %><% if (locktimeInterpretation) { %> <span class="text-muted">(<%= locktimeInterpretation %>)</span><% } %>
                             </span>
                         </div>
 
@@ -101,6 +101,19 @@
                                 <%= tx.fee && tx.size ? (tx.fee / tx.size).toFixed(2) : '0' %> sat/B
                             </span>
                         </div>
+
+                        <% if (typeof vsize === 'number') { %>
+                        <div class="detail-item">
+                            <span class="detail-label">Virtual Size</span>
+                            <span class="detail-value"><%= formatNumber(vsize) %> vB</span>
+                        </div>
+                        <% } %>
+                        <% if (feeRateSatPerVb) { %>
+                        <div class="detail-item">
+                            <span class="detail-label">Fee Rate (sat/vB)</span>
+                            <span class="detail-value"><%= feeRateSatPerVb %> sat/vB</span>
+                        </div>
+                        <% } %>
             </div>
         </div>
 
@@ -116,10 +129,15 @@
                 </div>
 
                 <div class="io-list">
-                    <% tx.vin.forEach(function(vin, index) { %>
-                        <div class="io-item">
-                            <div class="io-index">#<%= index %>
-                            </div>
+                    <% tx.vin.forEach(function(vin, index) {
+                        var seqNum = vin.sequence != null ? (typeof vin.sequence === 'number' ? vin.sequence : parseInt(vin.sequence, 16)) : null;
+                        var isRBF = seqNum != null && seqNum < 0xfffffffe;
+                        var scriptsigHex = vin.scriptsig != null ? (typeof vin.scriptsig === 'string' ? vin.scriptsig : (vin.scriptsig.hex || '')) : '';
+                        var scriptsigAsm = vin.scriptsig_asm || '';
+                        var witness = vin.witness || [];
+                    %>
+                        <div class="io-item io-item-detailed">
+                            <div class="io-index">#<%= index %></div>
                             <div class="io-content">
                                 <% if (vin.is_coinbase) { %>
                                     <div class="io-address coinbase">
@@ -136,18 +154,48 @@
                                                     <% } %>
                                         </div>
                                         <div class="io-amount">
-                                            <%= vin.prevout && vin.prevout.value ? (vin.prevout.value /
-                                                100000000).toFixed(8) : '0.00000000' %> <%= config.coinTicker %>
+                                            <%= vin.prevout && vin.prevout.value ? (vin.prevout.value / 100000000).toFixed(8) : '0.00000000' %> <%= config.coinTicker %>
                                         </div>
                                         <div class="io-txref">
                                             <a href="/tx/<%= vin.txid %>" class="text-muted">
                                                 <%= formatHash(vin.txid, 16) %>:<%= vin.vout %>
                                             </a>
                                         </div>
+                                        <!-- Input technical details -->
+                                        <div class="tx-technical">
+                                            <% if (seqNum != null) { %>
+                                            <div class="tx-technical-row">
+                                                <span class="tx-technical-label">Sequence</span>
+                                                <span class="tx-technical-value"><%= vin.sequence %> <% if (isRBF) { %><span class="badge badge-pending" title="Replace-by-fee enabled">RBF</span><% } %></span>
+                                            </div>
+                                            <% } %>
+                                            <% if (scriptsigAsm) { %>
+                                            <div class="tx-technical-row">
+                                                <span class="tx-technical-label">ScriptSig (asm)</span>
+                                                <span class="tx-technical-value mono-wrap"><%= scriptsigAsm %></span>
+                                            </div>
+                                            <% } %>
+                                            <% if (scriptsigHex) { %>
+                                            <div class="tx-technical-row">
+                                                <span class="tx-technical-label">ScriptSig (hex)</span>
+                                                <span class="tx-technical-value mono-wrap hex-value"><%= scriptsigHex %></span>
+                                            </div>
+                                            <% } %>
+                                            <% if (witness.length > 0) { %>
+                                            <div class="tx-technical-row">
+                                                <span class="tx-technical-label">Witness (<%= witness.length %> stack item(s))</span>
+                                                <div class="tx-technical-value">
+                                                    <% witness.forEach(function(w, i) { %>
+                                                    <div class="witness-item"><span class="witness-index"><%= i %></span> <code class="hex-value"><%= w %></code></div>
+                                                    <% }); %>
+                                                </div>
+                                            </div>
+                                            <% } %>
+                                        </div>
                                         <% } %>
                             </div>
                         </div>
-                        <% }); %>
+                    <% }); %>
                 </div>
             </div>
 
@@ -165,10 +213,13 @@
                 </div>
 
                 <div class="io-list">
-                    <% tx.vout.forEach(function(vout, index) { %>
-                        <div class="io-item">
-                            <div class="io-index">#<%= index %>
-                            </div>
+                    <% tx.vout.forEach(function(vout, index) {
+                        var spkHex = vout.scriptpubkey != null ? (typeof vout.scriptpubkey === 'string' ? vout.scriptpubkey : (vout.scriptpubkey.hex || '')) : '';
+                        var spkAsm = vout.scriptpubkey_asm || '';
+                        var spkType = vout.scriptpubkey_type || 'unknown';
+                    %>
+                        <div class="io-item io-item-detailed">
+                            <div class="io-index">#<%= index %></div>
                             <div class="io-content">
                                 <div class="io-address">
                                     <% if (vout.scriptpubkey_address) { %>
@@ -176,20 +227,50 @@
                                             <%= formatHash(vout.scriptpubkey_address, 24) %>
                                         </a>
                                         <% } else { %>
-                                            <span class="text-muted">
-                                                <%= vout.scriptpubkey_type || 'Unknown' %>
-                                            </span>
-                                            <% } %>
+                                            <span class="text-muted"><%= spkType %></span>
+                                        <% } %>
                                 </div>
                                 <div class="io-amount">
                                     <%= vout.value ? (vout.value / 100000000).toFixed(8) : '0.00000000' %> <%= config.coinTicker %>
                                 </div>
+                                <!-- Output technical details -->
+                                <div class="tx-technical">
+                                    <div class="tx-technical-row">
+                                        <span class="tx-technical-label">Type</span>
+                                        <span class="tx-technical-value"><code><%= spkType %></code></span>
+                                    </div>
+                                    <% if (spkAsm) { %>
+                                    <div class="tx-technical-row">
+                                        <span class="tx-technical-label">ScriptPubKey (asm)</span>
+                                        <span class="tx-technical-value mono-wrap"><%= spkAsm %></span>
+                                    </div>
+                                    <% } %>
+                                    <% if (spkHex) { %>
+                                    <div class="tx-technical-row">
+                                        <span class="tx-technical-label">ScriptPubKey (hex)</span>
+                                        <span class="tx-technical-value mono-wrap hex-value"><%= spkHex %></span>
+                                    </div>
+                                    <% } %>
+                                </div>
                             </div>
                         </div>
-                        <% }); %>
+                    <% }); %>
                 </div>
             </div>
         </div>
+
+        <!-- Raw transaction -->
+        <% if (rawHex) { %>
+        <div class="content-card">
+            <div class="card-header">
+                <h2><i class="fas fa-code"></i> Raw Transaction</h2>
+                <button type="button" class="copy-btn" onclick="copyToClipboard(document.getElementById('raw-tx-hex').innerText)" title="Copy hex">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
+            </div>
+            <pre id="raw-tx-hex" class="raw-hex-block"><%= rawHex %></pre>
+        </div>
+        <% } %>
     </div>
 
     <%- include('partials/footer') %>

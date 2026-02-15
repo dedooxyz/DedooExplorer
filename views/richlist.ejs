@@ -1,0 +1,105 @@
+<%- include('partials/header') %>
+
+    <div class="richlist-page">
+        <div class="page-header">
+            <h1><i class="fas fa-coins"></i> Rich List</h1>
+            <p class="page-subtitle">Top <%= formatNumber(limit) %> <%= config.coinName %> addresses by balance</p>
+            <% if (typeof indexerError !== 'undefined' && indexerError) { %>
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                Rich list requires the indexer. <%= indexerError %> — Ensure <code>INDEXER_API</code> is set and the indexer is running.
+            </div>
+            <% } %>
+        </div>
+
+        <!-- Summary -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">TOP ADDRESSES</span>
+                    <i class="fas fa-list-ol stat-icon"></i>
+                </div>
+                <div class="stat-value"><%= formatNumber(holders.length) %></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">TOTAL HOLDERS</span>
+                    <i class="fas fa-users stat-icon"></i>
+                </div>
+                <div class="stat-value"><%= formatNumber(totalHolders) %></div>
+            </div>
+            <% if (totalSupply != null && totalSupply > 0) { %>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">TOP <%= limit %> SHARE</span>
+                    <i class="fas fa-chart-pie stat-icon"></i>
+                </div>
+                <div class="stat-value">
+                    <% const topBalance = holders.reduce((sum, h) => sum + (h.balance || 0), 0); %>
+                    <%= ((topBalance / totalSupply) * 100).toFixed(1) %>%
+                </div>
+            </div>
+            <% } %>
+        </div>
+
+        <div class="content-card">
+            <div class="card-header">
+                <h2><i class="fas fa-trophy"></i> Richest Addresses</h2>
+                <span class="showing-info">Showing top <%= formatNumber(holders.length) %> of <%= formatNumber(totalHolders) %> holders</span>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Address</th>
+                            <th>Balance</th>
+                            <% if (totalSupply != null && totalSupply > 0) { %><th>% of Supply</th><% } %>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (holders.length === 0) { %>
+                            <tr>
+                                <td colspan="<%= totalSupply != null && totalSupply > 0 ? 4 : 3 %>" class="empty-state">
+                                    <i class="fas fa-inbox"></i>
+                                    <p><%= typeof indexerError !== 'undefined' && indexerError ? 'Start the indexer and set INDEXER_API in .env to see the rich list.' : 'No holders with balance yet.' %></p>
+                                </td>
+                            </tr>
+                        <% } else { %>
+                            <% holders.forEach(function(holder) { %>
+                                <tr class="clickable-row" onclick="window.location.href='/address/<%= holder.address %>'">
+                                    <td>
+                                        <span class="rank-badge rank-<%= holder.position <= 3 ? holder.position : '' %>"><%= holder.position %></span>
+                                    </td>
+                                    <td>
+                                        <span class="hash-value" title="<%= holder.address %>">
+                                            <a href="/address/<%= holder.address %>"><%= formatHash(holder.address, 24) %></a>
+                                            <button class="copy-btn" onclick="event.stopPropagation(); copyToClipboard('<%= holder.address %>')" title="Copy">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="balance-value">
+                                            <%= (holder.balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 8 }) %>
+                                            <span class="currency"><%= config.coinTicker %></span>
+                                        </span>
+                                    </td>
+                                    <% if (totalSupply != null && totalSupply > 0) { %>
+                                    <td>
+                                        <span class="text-muted"><%= totalSupply > 0 ? ((holder.balance || 0) / totalSupply * 100).toFixed(4) : '0' %>%</span>
+                                    </td>
+                                    <% } %>
+                                </tr>
+                            <% }); %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer-note">
+                <a href="/holders"><i class="fas fa-users"></i> View all holders</a>
+            </div>
+        </div>
+    </div>
+
+<%- include('partials/footer') %>
