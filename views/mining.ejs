@@ -1,0 +1,175 @@
+<%- include('partials/header') %>
+
+    <div class="mining-page">
+        <div class="page-header">
+            <h1><i class="fas fa-hammer"></i> Mining Stats</h1>
+            <p class="page-subtitle">Recent block production and miner distribution.</p>
+        </div>
+
+        <!-- Summary -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">RECENT BLOCKS</span>
+                    <i class="fas fa-cubes stat-icon"></i>
+                </div>
+                <div class="stat-value"><%= formatNumber(totalBlocks) %></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">UNIQUE MINERS</span>
+                    <i class="fas fa-users stat-icon"></i>
+                </div>
+                <div class="stat-value"><%= formatNumber(miners.length) %></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">NETWORK HASHRATE</span>
+                    <i class="fas fa-tachometer-alt stat-icon"></i>
+                </div>
+                <div class="stat-value"><%= typeof hashrate !== 'undefined' && hashrate ? formatHashrate(hashrate) : '--' %></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">CURRENT DIFFICULTY</span>
+                    <i class="fas fa-mountain stat-icon"></i>
+                </div>
+                <div class="stat-value"><%= typeof difficulty !== 'undefined' && difficulty ? formatDifficulty(difficulty) : '--' %></div>
+            </div>
+        </div>
+
+        <!-- Miner Distribution -->
+        <div class="content-card">
+            <div class="card-header">
+                <h2><i class="fas fa-chart-pie"></i> Miner Distribution (last <%= totalBlocks %> blocks)</h2>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Miner Address</th>
+                            <th>Blocks</th>
+                            <th>Share</th>
+                            <th>Total Reward</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (!miners || miners.length === 0) { %>
+                            <tr>
+                                <td colspan="4" class="empty-state">
+                                    <i class="fas fa-inbox"></i>
+                                    <p>No mining data available.</p>
+                                </td>
+                            </tr>
+                        <% } else { %>
+                            <% miners.forEach(function(m) { %>
+                                <tr class="clickable-row" onclick="window.location='/address/<%= m.minerAddress %>'">
+                                    <td>
+                                        <span class="hash-value" title="<%= m.minerAddress %>">
+                                            <a href="/address/<%= m.minerAddress %>"><%= formatHash(m.minerAddress || 'Unknown', 24) %></a>
+                                        </span>
+                                    </td>
+                                    <td><%= m.blocks %></td>
+                                    <td><%= ((m.blocks / totalBlocks) * 100).toFixed(1) %>%</td>
+                                    <td>
+                                        <%= (m.totalReward || 0).toFixed(2) %>
+                                        <span class="currency"><%= config.coinTicker %></span>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Recent Blocks with Miner -->
+        <div class="content-card">
+            <div class="card-header">
+                <h2><i class="fas fa-cube"></i> Recent Blocks &amp; Miners</h2>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Height</th>
+                            <th>Hash</th>
+                            <th>Time</th>
+                            <th>Miner Address</th>
+                            <th>Transactions</th>
+                            <th>Reward</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (!blocks || blocks.length === 0) { %>
+                            <tr>
+                                <td colspan="6" class="empty-state">
+                                    <i class="fas fa-inbox"></i>
+                                    <p>No recent blocks found.</p>
+                                </td>
+                            </tr>
+                        <% } else { %>
+                            <% blocks.forEach(function(block) { %>
+                                <tr class="clickable-row" onclick="window.location='/block/<%= block.hash %>'">
+                                    <td><span class="block-height"><%= formatNumber(block.height) %></span></td>
+                                    <td>
+                                        <span class="hash-value" title="<%= block.hash %>">
+                                            <%= formatHash(block.hash, 20) %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="time-cell">
+                                            <span class="time-ago"><%= formatTimeAgo(block.timestamp) %></span>
+                                            <span class="time-full"><%= formatDate(block.timestamp) %></span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="hash-value" title="<%= block.minerAddress %>">
+                                            <%= formatHash(block.minerAddress || 'Unknown', 24) %>
+                                        </span>
+                                    </td>
+                                    <td><%= block.txCount %></td>
+                                    <td>
+                                        <%= (block.reward || 0).toFixed(2) %>
+                                        <span class="currency"><%= config.coinTicker %></span>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- About Mining -->
+        <div class="content-card">
+            <div class="card-header">
+                <h2><i class="fas fa-info-circle"></i> About Mining</h2>
+            </div>
+            <div class="detail-grid glossary-list">
+                <div class="detail-item">
+                    <span class="detail-label">Proof of Work</span>
+                    <span class="detail-value"><%= config.coinName %> uses <%= config.algorithm %> proof of work. Miners compete to find a block hash below the network target.</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Block Reward</span>
+                    <span class="detail-value">The first transaction in each block (coinbase) pays the block reward to the miner address. Reward decreases at halving events.</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Target Block Time</span>
+                    <span class="detail-value"><%= config.blockTime %> seconds. Difficulty adjusts periodically so average block time stays near this target.</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Miner Address</span>
+                    <span class="detail-value">The first output of the coinbase transaction is the miner payout address. Pools may use one address per worker or a single pool address.</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Difficulty</span>
+                    <span class="detail-value">Higher difficulty means more hashes are required to find a valid block. See the <a href="/difficulty">Difficulty</a> page for history.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<%- include('partials/footer') %>
+

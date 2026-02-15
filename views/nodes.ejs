@@ -1,0 +1,108 @@
+<%- include('partials/header') %>
+
+    <div class="nodes-page">
+        <div class="page-header">
+            <h1><i class="fas fa-network-wired"></i> Nodes</h1>
+            <p class="page-subtitle">Network connections and peer information for <%= config.coinName %></p>
+        </div>
+
+        <% if (!network || network.error) { %>
+        <div class="content-card">
+            <div class="empty-state" style="padding: 3rem;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p><%= network?.details || 'Failed to load node info. Ensure the indexer is running and has RPC access.' %></p>
+            </div>
+        </div>
+        <% } else { %>
+        <!-- Network Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">TOTAL CONNECTIONS</span>
+                    <i class="fas fa-plug stat-icon"></i>
+                </div>
+                <div class="stat-value"><%= formatNumber(network.connections || 0) %></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">VERSION</span>
+                    <i class="fas fa-code-branch stat-icon"></i>
+                </div>
+                <div class="stat-value" style="font-size: 1rem;"><%= (network.subver || '').replace(/^\//, '').replace(/\/$/, '') || network.version || '--' %></div>
+            </div>
+        </div>
+
+        <!-- Network Info -->
+        <div class="content-card">
+            <div class="card-header">
+                <h2><i class="fas fa-info-circle"></i> Network Information</h2>
+            </div>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="detail-label">Protocol Version</span>
+                    <span class="detail-value"><%= network.protocolversion ?? '--' %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Relay Fee</span>
+                    <span class="detail-value"><%= network.relayfee != null ? network.relayfee + ' ' + config.coinTicker : '--' %></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Peers -->
+        <div class="content-card">
+            <div class="card-header">
+                <h2><i class="fas fa-users"></i> Connected Peers (<%= (network.peers || []).length %>)</h2>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Address</th>
+                            <th>Network</th>
+                            <th>Direction</th>
+                            <th>Version</th>
+                            <th>Height</th>
+                            <th>Connected</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (!network.peers || network.peers.length === 0) { %>
+                            <tr>
+                                <td colspan="6" class="empty-state">
+                                    <i class="fas fa-inbox"></i>
+                                    <p>No peers connected</p>
+                                </td>
+                            </tr>
+                        <% } else { %>
+                            <% (network.peers || []).forEach(function(peer) { %>
+                                <tr>
+                                    <td>
+                                        <span class="hash-value" title="<%= peer.addr %>">
+                                            <%= peer.addr || '--' %>
+                                        </span>
+                                    </td>
+                                    <td><span class="badge"><%= peer.network || 'ipv4' %></span></td>
+                                    <td>
+                                        <span class="<%= peer.inbound ? 'badge-in' : 'badge-out' %>">
+                                            <%= peer.inbound ? 'Inbound' : 'Outbound' %>
+                                        </span>
+                                    </td>
+                                    <td><%= (peer.subver || '').replace(/^\//, '').replace(/\/$/, '') || '--' %></td>
+                                    <td><%= peer.synced_blocks != null ? formatNumber(peer.synced_blocks) : (peer.startingheight != null ? formatNumber(peer.startingheight) : '--') %></td>
+                                    <td>
+                                        <% if (peer.conntime) { %>
+                                            <span class="time-ago"><%= formatTimeAgo(Math.floor(peer.conntime)) %></span>
+                                        <% } else { %>--<% } %>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <% } %>
+    </div>
+
+<%- include('partials/footer') %>

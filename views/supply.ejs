@@ -1,0 +1,140 @@
+<%- include('partials/header') %>
+
+    <div class="supply-page">
+        <div class="page-header">
+            <h1><i class="fas fa-chart-area"></i> Supply Dashboard</h1>
+            <p class="page-subtitle">Current Wojakcoin supply and issuance metrics.</p>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">CURRENT HEIGHT</span>
+                    <i class="fas fa-cube stat-icon"></i>
+                </div>
+                <div class="stat-value"><%= formatNumber(currentHeight) %></div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">TOTAL SUPPLY (on-chain)</span>
+                    <i class="fas fa-coins stat-icon"></i>
+                </div>
+                <div class="stat-value">
+                    <% if (totalSupply) { %>
+                        <%= formatNumber(Math.round(totalSupply)) %>
+                        <span class="currency"><%= config.coinTicker %></span>
+                    <% } else { %>
+                        <span class="currency">N/A</span>
+                    <% } %>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">CIRCULATING SUPPLY (indexer)</span>
+                    <i class="fas fa-chart-line stat-icon"></i>
+                </div>
+                <div class="stat-value">
+                    <% if (circulatingSupply) { %>
+                        <%= formatNumber(Math.round(circulatingSupply)) %>
+                        <span class="currency"><%= config.coinTicker %></span>
+                    <% } else { %>
+                        <span class="currency">N/A</span>
+                    <% } %>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">MAX SUPPLY</span>
+                    <i class="fas fa-infinity stat-icon"></i>
+                </div>
+                <div class="stat-value">
+                    <%= formatNumber(maxSupply) %>
+                    <span class="currency"><%= config.coinTicker %></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Bars -->
+        <div class="content-card">
+            <div class="card-header">
+                <h2><i class="fas fa-tachometer-alt"></i> Supply Progress</h2>
+            </div>
+            <div class="card-body" style="padding: 24px;">
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <span class="detail-label">Minted vs Max Supply</span>
+                        <div class="supply-progress">
+                            <div class="supply-progress-inner"
+                                style="width: <%= mintedPct ? Math.min(100, mintedPct).toFixed(2) : 0 %>%"></div>
+                        </div>
+                        <span class="detail-value">
+                            <% if (mintedPct != null && totalSupply) { %>
+                                <%= mintedPct.toFixed(2) %>% minted
+                                (~<%= formatNumber(Math.round(totalSupply)) %> / <%= formatNumber(maxSupply) %>
+                                <%= config.coinTicker %>)
+                            <% } else { %>
+                                N/A
+                            <% } %>
+                        </span>
+                    </div>
+
+                    <div class="detail-item">
+                        <span class="detail-label">Circulating vs Max Supply</span>
+                        <div class="supply-progress">
+                            <div class="supply-progress-inner secondary"
+                                style="width: <%= circPct ? Math.min(100, circPct).toFixed(2) : 0 %>%"></div>
+                        </div>
+                        <span class="detail-value">
+                            <% if (circPct != null && circulatingSupply) { %>
+                                <%= circPct.toFixed(2) %>% circulating
+                                (~<%= formatNumber(Math.round(circulatingSupply)) %> / <%= formatNumber(maxSupply) %>
+                                <%= config.coinTicker %>)
+                            <% } else { %>
+                                N/A
+                            <% } %>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Issuance -->
+        <div class="content-card">
+            <div class="card-header">
+                <h2><i class="fas fa-fire"></i> Issuance (approximate)</h2>
+            </div>
+            <div class="detail-grid" style="padding: 24px;">
+                <div class="detail-item">
+                    <span class="detail-label">Current Block Reward</span>
+                    <span class="detail-value">
+                        <%= currentReward.toFixed(2) %> <%= config.coinTicker %> / block
+                    </span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Blocks per Day</span>
+                    <span class="detail-value">
+                        ~<%= Math.round(blocksPerDay) %> blocks/day
+                    </span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Daily Issuance</span>
+                    <span class="detail-value">
+                        ~<%= formatNumber(Math.round(dailyIssuance)) %> <%= config.coinTicker %> / day
+                    </span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Yearly Issuance</span>
+                    <span class="detail-value">
+                        ~<%= formatNumber(Math.round(yearlyIssuance)) %> <%= config.coinTicker %> / year
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<%- include('partials/footer') %>
+

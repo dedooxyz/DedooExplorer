@@ -1,0 +1,107 @@
+<%- include('partials/header') %>
+
+    <div class="holders-page">
+        <div class="page-header">
+            <h1><i class="fas fa-users"></i> Holders</h1>
+            <p class="page-subtitle">Addresses with <%= config.coinTicker %> balance on the <%= config.coinName %> blockchain</p>
+        </div>
+
+        <div class="content-card">
+            <div class="card-header">
+                <h2><i class="fas fa-list-ol"></i> Holder List</h2>
+                <div class="header-controls">
+                    <span class="showing-info">
+                        <% if (total === 0) { %>No holders<% } else { %>Showing <%= (currentPage - 1) * limit + 1 %>-<%= Math.min(currentPage * limit, total) %> of <%= formatNumber(total) %> holders<% } %>
+                    </span>
+                    <div class="header-pagination">
+                        <a href="/holders?page=<%= Math.max(1, currentPage - 1) %>&limit=<%= limit %>" class="page-btn-sm <%= currentPage <= 1 ? 'disabled' : '' %>" <%= currentPage <= 1 ? 'onclick="return false;"' : '' %>>
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <span class="page-info">Page <%= currentPage %> of <%= totalPages %></span>
+                        <a href="/holders?page=<%= Math.min(totalPages, currentPage + 1) %>&limit=<%= limit %>" class="page-btn-sm <%= currentPage >= totalPages ? 'disabled' : '' %>" <%= currentPage >= totalPages ? 'onclick="return false;"' : '' %>>
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Address</th>
+                            <th>Balance</th>
+                            <th>Last Seen</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (holders.length === 0) { %>
+                            <tr>
+                                <td colspan="4" class="empty-state">
+                                    <i class="fas fa-inbox"></i>
+                                    <p>No holders data available. Ensure the indexer is running.</p>
+                                </td>
+                            </tr>
+                        <% } else { %>
+                            <% holders.forEach(function(holder) { %>
+                                <tr class="clickable-row" onclick="window.location.href='/address/<%= holder.address %>'">
+                                    <td><span class="rank-badge"><%= holder.position || '--' %></span></td>
+                                    <td>
+                                        <span class="hash-value" title="<%= holder.address %>">
+                                            <a href="/address/<%= holder.address %>"><%= formatHash(holder.address, 20) %></a>
+                                            <button class="copy-btn" onclick="event.stopPropagation(); copyToClipboard('<%= holder.address %>')" title="Copy">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="balance-value">
+                                            <%= (holder.balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 8 }) %>
+                                            <span class="currency"><%= config.coinTicker %></span>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <% if (holder.last_seen) { %>
+                                            <div class="time-cell">
+                                                <span class="time-ago"><%= formatTimeAgo(holder.last_seen) %></span>
+                                                <span class="time-full"><%= formatDate(holder.last_seen) %></span>
+                                            </div>
+                                        <% } else { %>
+                                            <span class="text-muted">--</span>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+
+            <% if (totalPages > 1) { %>
+            <div class="pagination-footer">
+                <a href="/holders?page=1&limit=<%= limit %>" class="page-btn <%= currentPage <= 1 ? 'disabled' : '' %>" <%= currentPage <= 1 ? 'onclick="return false;"' : '' %>>
+                    <i class="fas fa-angle-double-left"></i> First
+                </a>
+                <a href="/holders?page=<%= Math.max(1, currentPage - 1) %>&limit=<%= limit %>" class="page-btn <%= currentPage <= 1 ? 'disabled' : '' %>" <%= currentPage <= 1 ? 'onclick="return false;"' : '' %>>
+                    <i class="fas fa-chevron-left"></i> Prev
+                </a>
+                <span class="page-numbers">
+                    <% const startPage = Math.max(1, currentPage - 2); %>
+                    <% const endPage = Math.min(totalPages, currentPage + 2); %>
+                    <% for (let p = startPage; p <= endPage; p++) { %>
+                        <a href="/holders?page=<%= p %>&limit=<%= limit %>" class="page-btn <%= p === currentPage ? 'active' : '' %>"><%= p %></a>
+                    <% } %>
+                </span>
+                <a href="/holders?page=<%= Math.min(totalPages, currentPage + 1) %>&limit=<%= limit %>" class="page-btn <%= currentPage >= totalPages ? 'disabled' : '' %>" <%= currentPage >= totalPages ? 'onclick="return false;"' : '' %>>
+                    Next <i class="fas fa-chevron-right"></i>
+                </a>
+                <a href="/holders?page=<%= totalPages %>&limit=<%= limit %>" class="page-btn <%= currentPage >= totalPages ? 'disabled' : '' %>" <%= currentPage >= totalPages ? 'onclick="return false;"' : '' %>>
+                    Last <i class="fas fa-angle-double-right"></i>
+                </a>
+            </div>
+            <% } %>
+        </div>
+    </div>
+
+<%- include('partials/footer') %>

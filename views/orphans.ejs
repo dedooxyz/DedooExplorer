@@ -1,0 +1,112 @@
+<%- include('partials/header') %>
+
+    <div class="orphans-page">
+        <div class="page-header">
+            <h1><i class="fas fa-unlink"></i> Orphaned Blocks</h1>
+            <p class="page-subtitle">Blocks that are valid but not part of the main chain</p>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">ORPHANED BLOCKS</span>
+                    <i class="fas fa-unlink stat-icon"></i>
+                </div>
+                <div class="stat-value"><%= formatNumber(orphans.length) %></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">HIGHEST ORPHAN</span>
+                    <i class="fas fa-arrow-up stat-icon"></i>
+                </div>
+                <div class="stat-value">
+                    <%= orphans.length > 0 ? formatNumber(Math.max(...orphans.map(o => o.height))) : '--' %>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">MAIN CHAIN HEIGHT</span>
+                    <i class="fas fa-cube stat-icon"></i>
+                </div>
+                <div class="stat-value"><%= formatNumber(tipHeight) %></div>
+            </div>
+        </div>
+
+        <!-- Orphans Table -->
+        <div class="content-card">
+            <div class="card-header">
+                <h2><i class="fas fa-list"></i> Orphaned Blocks</h2>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Height</th>
+                            <th>Hash</th>
+                            <th>Branch Length</th>
+                            <th>Status</th>
+                            <th>Behind Main</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (!orphans || orphans.length === 0) { %>
+                            <tr>
+                                <td colspan="5" class="empty-state">
+                                    <i class="fas fa-check-circle"></i>
+                                    <p>No orphaned blocks detected.</p>
+                                </td>
+                            </tr>
+                        <% } else { %>
+                            <% orphans.forEach(function(orphan) { %>
+                                <tr>
+                                    <td><span class="block-height"><%= formatNumber(orphan.height) %></span></td>
+                                    <td>
+                                        <a href="/block/<%= orphan.hash %>" class="hash-value" title="<%= orphan.hash %>">
+                                            <%= formatHash(orphan.hash, 20) %>
+                                        </a>
+                                    </td>
+                                    <td><%= formatNumber(orphan.branchlen) %></td>
+                                    <td>
+                                        <span class="badge badge-<%= orphan.status === 'valid-fork' ? 'pending' : 'info' %>">
+                                            <%= orphan.status %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <%= formatNumber(tipHeight - orphan.height) %> blocks
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Info Card -->
+        <div class="content-card">
+            <div class="card-header">
+                <h2><i class="fas fa-info-circle"></i> About Orphaned Blocks</h2>
+            </div>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="detail-label">What are Orphans?</span>
+                    <span class="detail-value">Valid blocks that were part of a shorter chain and are no longer in the main chain</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Why They Exist</span>
+                    <span class="detail-value">Normal part of blockchain consensus - miners may find blocks simultaneously</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Impact</span>
+                    <span class="detail-value">Orphaned blocks are valid but their transactions may be in other blocks</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Monitoring</span>
+                    <span class="detail-value">High orphan rates may indicate network issues or mining centralization</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<%- include('partials/footer') %>

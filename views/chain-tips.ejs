@@ -1,0 +1,112 @@
+<%- include('partials/header') %>
+
+    <div class="chain-tips-page">
+        <div class="page-header">
+            <h1><i class="fas fa-code-branch"></i> Chain Tips & Forks</h1>
+            <p class="page-subtitle">Monitor active chain forks and potential reorganizations</p>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">ACTIVE TIPS</span>
+                    <i class="fas fa-code-branch stat-icon"></i>
+                </div>
+                <div class="stat-value"><%= formatNumber(chainTips.length) %></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">MAIN CHAIN HEIGHT</span>
+                    <i class="fas fa-cube stat-icon"></i>
+                </div>
+                <div class="stat-value"><%= formatNumber(tipHeight) %></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">FORKED CHAINS</span>
+                    <i class="fas fa-exclamation-triangle stat-icon"></i>
+                </div>
+                <div class="stat-value">
+                    <%= formatNumber(chainTips.filter(function(t) { return t.status === 'valid-fork' || t.status === 'valid-headers'; }).length) %>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chain Tips Table -->
+        <div class="content-card">
+            <div class="card-header">
+                <h2><i class="fas fa-list"></i> Chain Tips</h2>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Height</th>
+                            <th>Hash</th>
+                            <th>Branch Length</th>
+                            <th>Status</th>
+                            <th>Fork Height</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (!chainTips || chainTips.length === 0) { %>
+                            <tr>
+                                <td colspan="5" class="empty-state">
+                                    <i class="fas fa-check-circle"></i>
+                                    <p>No active forks detected. Chain is healthy.</p>
+                                </td>
+                            </tr>
+                        <% } else { %>
+                            <% chainTips.sort(function(a, b) { return b.height - a.height; }).forEach(function(tip) { %>
+                                <tr class="<%= tip.status === 'active' ? 'success-row' : tip.status === 'valid-fork' ? 'warning-row' : '' %>">
+                                    <td><span class="block-height"><%= formatNumber(tip.height) %></span></td>
+                                    <td>
+                                        <a href="/block/<%= tip.hash %>" class="hash-value" title="<%= tip.hash %>">
+                                            <%= formatHash(tip.hash, 20) %>
+                                        </a>
+                                    </td>
+                                    <td><%= formatNumber(tip.branchlen || 0) %></td>
+                                    <td>
+                                        <span class="badge badge-<%= tip.status === 'active' ? 'confirmed' : tip.status === 'valid-fork' ? 'pending' : 'info' %>">
+                                            <%= tip.status %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <%= tip.branchlen ? formatNumber(tip.height - (tip.branchlen || 0)) : '--' %>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Info Card -->
+        <div class="content-card">
+            <div class="card-header">
+                <h2><i class="fas fa-info-circle"></i> About Chain Tips</h2>
+            </div>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="detail-label">Active</span>
+                    <span class="detail-value">The main chain tip (longest chain)</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Valid Fork</span>
+                    <span class="detail-value">A valid chain fork that may cause a reorg</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Valid Headers</span>
+                    <span class="detail-value">Chain with valid headers but incomplete blocks</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Branch Length</span>
+                    <span class="detail-value">Number of blocks in this fork branch</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<%- include('partials/footer') %>

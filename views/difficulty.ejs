@@ -1,0 +1,192 @@
+<%- include('partials/header') %>
+
+    <div class="difficulty-page">
+        <div class="page-header">
+            <h1><i class="fas fa-mountain"></i> Difficulty History</h1>
+            <p class="page-subtitle">Track mining difficulty adjustments over time</p>
+        </div>
+
+        <!-- Current Difficulty -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">CURRENT DIFFICULTY</span>
+                    <i class="fas fa-mountain stat-icon"></i>
+                </div>
+                <div class="stat-value">
+                    <%= difficultyHistory.length > 0 ? formatDifficulty(difficultyHistory[difficultyHistory.length - 1].difficulty) : '--' %>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">MIN DIFFICULTY</span>
+                    <i class="fas fa-arrow-down stat-icon"></i>
+                </div>
+                <div class="stat-value">
+                    <%= difficultyHistory.length > 0 ? formatDifficulty(Math.min(...difficultyHistory.map(d => d.difficulty))) : '--' %>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">MAX DIFFICULTY</span>
+                    <i class="fas fa-arrow-up stat-icon"></i>
+                </div>
+                <div class="stat-value">
+                    <%= difficultyHistory.length > 0 ? formatDifficulty(Math.max(...difficultyHistory.map(d => d.difficulty))) : '--' %>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">SAMPLES</span>
+                    <i class="fas fa-chart-line stat-icon"></i>
+                </div>
+                <div class="stat-value"><%= formatNumber(difficultyHistory.length) %></div>
+            </div>
+        </div>
+
+        <!-- Difficulty Chart -->
+        <div class="content-card chart-card">
+            <div class="card-header">
+                <h2><i class="fas fa-chart-area"></i> Difficulty Over Time</h2>
+            </div>
+            <div class="chart-container">
+                <canvas id="difficultyChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Difficulty Table -->
+        <div class="content-card">
+            <div class="card-header">
+                <h2><i class="fas fa-list"></i> Difficulty History</h2>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Height</th>
+                            <th>Date</th>
+                            <th>Difficulty</th>
+                            <th>Change</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (!difficultyHistory || difficultyHistory.length === 0) { %>
+                            <tr>
+                                <td colspan="4" class="empty-state">
+                                    <i class="fas fa-inbox"></i>
+                                    <p>No difficulty history available.</p>
+                                </td>
+                            </tr>
+                        <% } else { %>
+                            <% difficultyHistory.slice().reverse().forEach(function(entry, index) { %>
+                                <tr>
+                                    <td><span class="block-height"><%= formatNumber(entry.height) %></span></td>
+                                    <td><%= formatDate(entry.timestamp) %></td>
+                                    <td><%= formatDifficulty(entry.difficulty) %></td>
+                                    <td>
+                                        <% if (index > 0) { 
+                                            const prev = difficultyHistory[difficultyHistory.length - index];
+                                            const change = ((entry.difficulty - prev.difficulty) / prev.difficulty * 100).toFixed(2);
+                                        %>
+                                            <span class="badge badge-<%= change > 0 ? 'pending' : 'confirmed' %>">
+                                                <%= change > 0 ? '+' : '' %><%= change %>%
+                                            </span>
+                                        <% } else { %>
+                                            --
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- About Difficulty -->
+        <div class="content-card">
+            <div class="card-header">
+                <h2><i class="fas fa-info-circle"></i> About Difficulty</h2>
+            </div>
+            <div class="detail-grid glossary-list">
+                <div class="detail-item">
+                    <span class="detail-label">What is difficulty?</span>
+                    <span class="detail-value">Difficulty measures how hard it is to find a valid block. It is derived from the block header target: lower target means higher difficulty and more hashes needed on average.</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Difficulty adjustment</span>
+                    <span class="detail-value"><%= config.coinName %> uses <%= config.diffAdjustment %>. The network periodically recalculates difficulty so that block times stay near the target (<%= config.blockTime %> seconds).</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Hashrate and difficulty</span>
+                    <span class="detail-value">Expected hashes per block ≈ difficulty × 2<sup>32</sup> (for <%= config.algorithm %>). Network hashrate (H/s) ≈ (difficulty × 2<sup>32</sup>) ÷ block time.</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Why it changes</span>
+                    <span class="detail-value">If blocks are found too quickly, difficulty increases. If too slowly, it decreases. This keeps issuance and security predictable.</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Chart &amp; table</span>
+                    <span class="detail-value">The chart and table above show difficulty at sampled block heights. Use the <a href="/mining">Mining</a> page for current hashrate and miner distribution.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const difficultyHistory = <%- JSON.stringify(difficultyHistory) %>;
+        
+        if (difficultyHistory && difficultyHistory.length > 0) {
+            const ctx = document.getElementById('difficultyChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: difficultyHistory.map(d => d.date),
+                    datasets: [{
+                        label: 'Difficulty',
+                        data: difficultyHistory.map(d => d.difficulty),
+                        fill: true,
+                        backgroundColor: 'rgba(245, 166, 35, 0.2)',
+                        borderColor: '#F5A623',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#F5A623'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Difficulty: ' + context.parsed.y.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#888' }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { 
+                                color: '#888',
+                                callback: function(value) {
+                                    if (value >= 1e6) return (value / 1e6).toFixed(1) + 'M';
+                                    if (value >= 1e3) return (value / 1e3).toFixed(1) + 'K';
+                                    return value.toFixed(0);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+
+<%- include('partials/footer') %>

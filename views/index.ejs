@@ -137,7 +137,7 @@
 
     <script>
         // Transaction Volume Chart
-        const blockData = <% - JSON.stringify(blocks.slice().reverse()) %>;
+        const blockData = <%- JSON.stringify(blocks.slice().reverse()) %>;
         const ctx = document.getElementById('txVolumeChart').getContext('2d');
         new Chart(ctx, {
             type: 'line',
